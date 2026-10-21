@@ -1,0 +1,26 @@
+# Entornos virtuales Python
+.venv/
+venv/
+ENV/
+env/
+
+# IDEs
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
