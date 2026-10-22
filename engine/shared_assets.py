@@ -11,9 +11,9 @@ import os
 _ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # carpeta 2027
 
 
-def sfx_path(name):
-    """Ruta al efecto de sonido `name` (sin extensión)."""
-    return os.path.join(_ROOT, "assets", "sonidos", f"{name}.wav")
+def sfx_path(name, extension="wav"):
+    """Ruta al efecto de sonido `name`, con la extensión indicada."""
+    return os.path.join(_ROOT, "assets", "sonidos", f"{name}.{extension}")
 
 
 def music_path(name):

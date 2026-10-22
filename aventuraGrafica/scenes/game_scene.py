@@ -9,6 +9,7 @@ from engine.ui import Scene
 from engine.dialogue_manager import DialogueManager
 from engine.inventory import Inventory, Item
 from engine.hotspot import Hotspot
+from engine.shared_assets import sfx_path
 
 # Importar escenas individuales
 from .isla import IslaScene
@@ -70,6 +71,12 @@ class GameScene(Scene):
         self.state = GameState.IDLE
         self.player = pygame.Vector2(480, 420)
         self.target = self.player.copy()
+        self.sonido_pasos = None
+        self.canal_pasos = None
+        try:
+            self.sonido_pasos = pygame.mixer.Sound(sfx_path("pasos", "mp3"))
+        except (pygame.error, OSError) as e:
+            print(f"Error al cargar el sonido de pasos: {e}")
         self.pending_hotspot = None
         self.pending_item = None
         self.dialogue_choices = []
@@ -107,7 +114,18 @@ class GameScene(Scene):
 
     def on_exit(self):
         """Limpieza al salir de la escena."""
-        pass
+        self._actualizar_audio_pasos(False)
+
+    def _actualizar_audio_pasos(self, caminando):
+        """Reproduce pasos solo mientras el jugador se está desplazando."""
+        if self.sonido_pasos is None:
+            return
+
+        if caminando and self.canal_pasos is None:
+            self.canal_pasos = self.sonido_pasos.play(loops=-1)
+        elif not caminando and self.canal_pasos is not None:
+            self.canal_pasos.stop()
+            self.canal_pasos = None
 
     def _configurar_mundo(self):
         """Configura las zonas caminables y hotspots delegando a las escenas."""
@@ -133,6 +151,7 @@ class GameScene(Scene):
 
     def _cambiar_escena(self, scene, starting_position=None):
         """Cambia de escena."""
+        self._actualizar_audio_pasos(False)
         self.scene = scene
         self.state = GameState.IDLE
         self.pending_hotspot = None
@@ -709,13 +728,17 @@ class GameScene(Scene):
             offset = self.target - self.player
             distance = offset.length()
             if distance <= 4:
+                self._actualizar_audio_pasos(False)
                 self.player.update(self.target)
                 if self.pending_hotspot is not None:
                     self._llegar_al_hotspot()
                 else:
                     self.state = GameState.IDLE
             elif distance > 0:
+                self._actualizar_audio_pasos(True)
                 self.player += offset.normalize() * min(3.4, distance)
+        else:
+            self._actualizar_audio_pasos(False)
 
     def draw(self, surface):
         """Renderiza el juego delegando a las escenas correspondientes."""
