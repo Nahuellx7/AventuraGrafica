@@ -163,6 +163,8 @@ class FaroInteriorScene:
 
     def _draw_beacon_panel_on_table(self, progreso_luces, table_x, table_y, table_width):
         """Dibuja el panel de luces grande en la parte superior de la mesa."""
+        PAPER = (241, 220, 169)
+
         # Panel de luces centrado en la parte superior de la mesa
         panel_x = table_x + 30
         panel_y = table_y + 20

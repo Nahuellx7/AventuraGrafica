@@ -9,7 +9,7 @@ from engine.ui import Scene
 from engine.dialogue_manager import DialogueManager
 from engine.inventory import Inventory, Item
 from engine.hotspot import Hotspot
-from engine.shared_assets import sfx_path
+from engine.shared_assets import sfx_path, shared_dir
 
 # Importar escenas individuales
 from .isla import IslaScene
@@ -32,6 +32,14 @@ INK = (20, 19, 35)
 PANEL = (37, 31, 43)
 GOLD = (230, 184, 104)
 PAPER = (241, 220, 169)
+DOOR_TRANSITIONS = {
+    ("isla", "refugio"): "abrirPuerta",
+    ("refugio", "isla"): "cerrarPuerta",
+    ("isla", "herreria"): "abrirPuerta",
+    ("herreria", "isla"): "cerrarPuerta",
+    ("faro", "faro_interior"): "abrirPuerta",
+    ("faro_interior", "faro"): "cerrarPuerta",
+}
 
 
 class GameState(Enum):
@@ -59,7 +67,7 @@ class GameScene(Scene):
 
         # Cargar cursor personalizado con transparencia (convert_alpha)
         try:
-            cursor_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "assets", "sprites", "pointer_b.png")
+            cursor_path = os.path.join(shared_dir(), "sprites", "pointer_b.png")
             self.cursor_image = pygame.image.load(cursor_path).convert_alpha()
         except Exception as e:
             print(f"Error cargando cursor: {e}")
@@ -77,6 +85,12 @@ class GameScene(Scene):
             self.sonido_pasos = pygame.mixer.Sound(sfx_path("pasos", "mp3"))
         except (pygame.error, OSError) as e:
             print(f"Error al cargar el sonido de pasos: {e}")
+        self.sonidos_puerta = {}
+        for nombre in ("abrirPuerta", "cerrarPuerta"):
+            try:
+                self.sonidos_puerta[nombre] = pygame.mixer.Sound(sfx_path(nombre, "mp3"))
+            except (pygame.error, OSError) as e:
+                print(f"Error al cargar el sonido {nombre}: {e}")
         self.pending_hotspot = None
         self.pending_item = None
         self.dialogue_choices = []
@@ -151,6 +165,12 @@ class GameScene(Scene):
 
     def _cambiar_escena(self, scene, starting_position=None):
         """Cambia de escena."""
+        sonido_puerta = self.sonidos_puerta.get(
+            DOOR_TRANSITIONS.get((self.scene, scene))
+        )
+        if sonido_puerta is not None:
+            sonido_puerta.play()
+
         self._actualizar_audio_pasos(False)
         self.scene = scene
         self.state = GameState.IDLE

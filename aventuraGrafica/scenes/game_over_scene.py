@@ -3,6 +3,7 @@
 import os
 import pygame
 from engine.ui import Scene, Button
+from engine.shared_assets import shared_dir
 
 
 class GameOverScene(Scene):
@@ -18,7 +19,7 @@ class GameOverScene(Scene):
         
         # Cargar cursor personalizado
         try:
-            cursor_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "assets", "sprites", "pointer_b.png")
+            cursor_path = os.path.join(shared_dir(), "sprites", "pointer_b.png")
             self.cursor_image = pygame.image.load(cursor_path).convert_alpha()
         except:
             self.cursor_image = None

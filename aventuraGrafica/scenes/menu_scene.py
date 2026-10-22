@@ -3,6 +3,7 @@
 import os
 import pygame
 from engine.ui import Scene, Button
+from engine.shared_assets import shared_dir
 
 
 class MenuScene(Scene):
@@ -16,25 +17,21 @@ class MenuScene(Scene):
         self.font_subtitle = pygame.font.Font(None, 36)
         self.font_hint = pygame.font.Font(None, 26)
 
-        # Cargar cursor personalizado
         try:
-            cursor_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "assets", "sprites", "pointer_b.png")
+            cursor_path = os.path.join(shared_dir(), "sprites", "pointer_b.png")
             self.cursor_image = pygame.image.load(cursor_path).convert_alpha()
         except:
             self.cursor_image = None
 
-        # Verificar si hay un juego en curso
-        self.game_started = hasattr(game, 'game_scene') and game.game_scene is not None
-
-        # Generar estrellas para el fondo
+        self.game_started = getattr(game, "game_scene", None) is not None
         self.stars = self._generate_stars()
-
-        # Animación
         self.t = 0.0
+        self._create_buttons()
 
     def _generate_stars(self):
         """Genera estrellas para el fondo."""
         import random
+
         random.seed(42)
         stars = []
         for _ in range(150):
@@ -46,7 +43,7 @@ class MenuScene(Scene):
             stars.append({'x': x, 'y': y, 'size': size, 'brightness': brightness, 'speed': twinkle_speed})
         return stars
 
-        # Botones según el estado del juego
+    def _create_buttons(self):
         if self.game_started:
             self.boton_reanudar = Button(
                 330, 330, 300, 60, "Reanudar", self.reanudar_juego,
@@ -69,41 +66,12 @@ class MenuScene(Scene):
                 330, 430, 300, 60, "Salir", self.salir,
                 font_size=36, color=(220, 90, 90), hover_color=(240, 110, 110)
             )
-
-        # Variable de animación
-        self.t = 0.0
 
     def on_enter(self):
-        """Se ejecuta al entrar al menú."""
         self.t = 0.0
-        # Actualizar estado del juego
-        self.game_started = hasattr(self.game, 'game_scene') and self.game.game_scene is not None
-        # Recrear botones según el estado
-        if self.game_started:
-            self.boton_reanudar = Button(
-                330, 330, 300, 60, "Reanudar", self.reanudar_juego,
-                font_size=36, color=(90, 150, 220), hover_color=(110, 170, 240)
-            )
-            self.boton_reiniciar = Button(
-                330, 410, 300, 60, "Reiniciar", self.reiniciar_juego,
-                font_size=36, color=(220, 160, 60), hover_color=(240, 180, 80)
-            )
-            self.boton_salir = Button(
-                330, 490, 300, 60, "Salir", self.salir,
-                font_size=36, color=(220, 90, 90), hover_color=(240, 110, 110)
-            )
-        else:
-            self.boton_comenzar = Button(
-                330, 350, 300, 60, "Empezar", self.comenzar_juego,
-                font_size=36, color=(90, 150, 220), hover_color=(110, 170, 240)
-            )
-            self.boton_salir = Button(
-                330, 430, 300, 60, "Salir", self.salir,
-                font_size=36, color=(220, 90, 90), hover_color=(240, 110, 110)
-            )
-        # Desactivar cursor nativo (usaremos cursor personalizado)
+        self.game_started = getattr(self.game, "game_scene", None) is not None
+        self._create_buttons()
         pygame.mouse.set_visible(False)
-        # Si hay audio, reproducir música del menú
         if hasattr(self.game, 'audio'):
             try:
                 self.game.audio.play_music(volume=0.3)
@@ -116,41 +84,27 @@ class MenuScene(Scene):
 
     def comenzar_juego(self):
         """Inicia el juego cambiando a la escena 'game'."""
-        # Reproducir sonido de click si existe
-        if hasattr(self.game, 'audio'):
-            try:
-                self.game.audio.play_sound("click")
-            except:
-                pass
-
-        # Crear nueva escena del juego (borrar la anterior si existe)
+        self._play_click()
         self.game.game_scene = None
         self.game.change_scene("game")
 
     def reanudar_juego(self):
         """Reanuda el juego existente."""
-        # Reproducir sonido de click si existe
-        if hasattr(self.game, 'audio'):
-            try:
-                self.game.audio.play_sound("click")
-            except:
-                pass
-
-        # Cambiar a la escena del juego existente
+        self._play_click()
         self.game.change_scene("game")
 
     def reiniciar_juego(self):
         """Reinicia el juego desde el principio."""
-        # Reproducir sonido de click si existe
+        self._play_click()
+        self.game.game_scene = None
+        self.game.change_scene("game")
+
+    def _play_click(self):
         if hasattr(self.game, 'audio'):
             try:
                 self.game.audio.play_sound("click")
             except:
                 pass
-
-        # Crear nueva escena del juego
-        self.game.game_scene = None
-        self.game.change_scene("game")
 
     def salir(self):
         """Sale del juego."""
