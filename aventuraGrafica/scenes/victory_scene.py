@@ -3,6 +3,7 @@
 import os
 import pygame
 from engine.ui import Scene, Button
+from engine.shared_assets import music_path
 
 
 class VictoryScene(Scene):
@@ -53,11 +54,24 @@ class VictoryScene(Scene):
         self.t = 0.0
         # Desactivar cursor nativo (usaremos cursor personalizado)
         pygame.mouse.set_visible(False)
+        # Detener cualquier música previa
+        if hasattr(self.game, 'audio') and self.game.audio.enabled:
+            try:
+                self.game.audio.stop_music()
+            except Exception as e:
+                pass
         # Reproducir sonido de victoria si existe
         if hasattr(self.game, 'audio'):
             try:
                 self.game.audio.play_sound("cheer")
             except:
+                pass
+        # Cargar y reproducir música de victoria
+        if hasattr(self.game, 'audio') and self.game.audio.enabled:
+            try:
+                self.game.audio.load_music(music_path("menu_principal", "mp3"))
+                self.game.audio.play_music(loops=-1, volume=0.3)
+            except Exception as e:
                 pass
 
     def on_exit(self):
@@ -66,6 +80,13 @@ class VictoryScene(Scene):
 
     def volver_menu(self):
         """Vuelve al menú principal."""
+        # Detener música de victoria
+        if hasattr(self.game, 'audio') and self.game.audio.enabled:
+            try:
+                self.game.audio.stop_music()
+            except Exception as e:
+                pass
+        # Reproducir sonido de click
         if hasattr(self.game, 'audio'):
             try:
                 self.game.audio.play_sound("click")

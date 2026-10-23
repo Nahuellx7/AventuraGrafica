@@ -8,11 +8,11 @@ from engine.hotspot import Hotspot
 class FaroInteriorScene:
     """Escena interior del faro con hotspots, polígono caminable y dibujo."""
 
-    # Constantes de color
+    # Constantes
     GOLD = (230, 184, 104)
     PAPER = (241, 220, 169)
-    SCREEN_WIDTH = 960
-    SCREEN_HEIGHT = 490
+    ANCHO_VENTANA = 960
+    ALTURA_JUEGO = 490
 
     # Hotspots del faro interior
     HOTSPOTS = [
@@ -49,37 +49,35 @@ class FaroInteriorScene:
 
     def draw(self, progreso_luces, inventory, puzle_luces_resuelto=False):
         """Dibuja la escena interior del faro con el panel de luces."""
-        # CAPA 1: Fondo con ambiente de altura (ventana alta arqueada al fondo)
-        # Degradado sutil de arriba a abajo
-        for y in range(0, self.SCREEN_HEIGHT, 20):
+        for y in range(0, self.ALTURA_JUEGO, 20):
             shade = min(15, y // 30)
             color = (28 + shade, 24 + shade, 35 + shade)
-            pygame.draw.rect(self.screen, color, (0, y, self.SCREEN_WIDTH, 20))
+            pygame.draw.rect(self.screen, color, (0, y, self.ANCHO_VENTANA, 20))
 
         # Ventana alta con arco que muestra la noche y estrellas
         self._draw_tall_lighthouse_window(puzle_luces_resuelto)
 
-        # CAPA 2: Mesa de madera centrada
+        # Mesa de madera principal
         table_x = 260
         table_y = 200
         table_width = 440
         table_height = 240
         self._draw_wooden_table(table_x, table_y, table_width, table_height)
 
-        # CAPA 3: Sobre la mesa - Panel de luces grande e interruptor
+        # Sobre la mesa - Panel de luces grande e interruptor
         self._draw_beacon_panel_on_table(progreso_luces, table_x, table_y, table_width)
         self._draw_lighthouse_switch_on_table(progreso_luces, table_x, table_y, table_width)
 
-        # CAPA 4: Mesa pequeña en la esquina (siempre visible)
+        # Mesa pequeña en la esquina
         self._draw_lighthouse_table()
-        # CAPA 5: Tarjeta de acceso sobre la mesa (solo si no está en inventario)
+        # Tarjeta de acceso sobre la mesa
         if not inventory.has("Tarjeta de acceso"):
             self._draw_lighthouse_card()
 
-        # CAPA 6: Salida visible del faro (trampilla en el suelo)
+        # Salida visible del faro
         self._draw_interior_exit()
 
-        # CAPA 7: Etiqueta de la escena
+        # Etiqueta de la escena
         self._draw_label("SALA DEL FARO", (24, 18))
 
     # ============ MÉTODOS AUXILIARES DE DIBUJO ============

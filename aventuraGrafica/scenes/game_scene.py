@@ -23,25 +23,27 @@ from .bunker_interior import BunkerInteriorScene
 from .puzzles import PuzzleManager
 
 
-# Constantes de pantalla y colores
-SCREEN_WIDTH = 960
-SCREEN_HEIGHT = 640
-WORLD_HEIGHT = 490
-UI_TOP = WORLD_HEIGHT
+# Constantes de pantalla
+ANCHO_VENTANA = 960
+ALTO_VENTANA = 640
+ALTURA_JUEGO = 490
+INICIO_UI = ALTURA_JUEGO
 
-INK = (20, 19, 35)
-PANEL = (37, 31, 43)
-GOLD = (230, 184, 104)
-PAPER = (241, 220, 169)
+# Colores del juego 
+AZUL_OSCURO = (20, 19, 35) # Fondo de pantalla
+PANEL = (37, 31, 43)       # Paneles de interfaz
+DORADO = (230, 184, 104)   # Elementos destacados 
+PAPEL = (241, 220, 169)    # Texto normal y documentos
 
 
-class GameState(Enum):
-    IDLE = auto()
-    WALKING = auto()
-    INTERACTING = auto()
-    DIALOGUE = auto()
-    KEYPAD = auto()
-    WON = auto()
+class EstadoJuego(Enum):
+    """Estados en los que puede estar el juego durante la ejecución."""
+    INACTIVO = auto()        # Jugador esperando input
+    CAMINANDO = auto()       # Personaje moviéndose
+    INTERACTUANDO = auto()   # Interactuando con objeto/hotspot
+    DIALOGO = auto()         # En conversación con NPC
+    TECLADO = auto()         # Usando teclado numérico (puzle)
+    GANADO = auto()          # Juego completado
 
 
 class GameScene(Scene):
@@ -70,9 +72,7 @@ class GameScene(Scene):
         try:
             heart_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "assets", "sprites", "corazon.png")
             self.heart_image = pygame.image.load(heart_path).convert_alpha()
-            # Escalar el corazón a un tamaño proporcional (24x24)
             self.heart_image = pygame.transform.scale(self.heart_image, (24, 24))
-            # Asegurar transparencia después de escalar
             self.heart_image = self.heart_image.convert_alpha()
         except Exception as e:
             self.heart_image = None
@@ -80,12 +80,18 @@ class GameScene(Scene):
         # Estado del juego
         self.scene = "isla"
         self.verb = "MIRAR"
-        self.state = GameState.IDLE
+        self.state = EstadoJuego.INACTIVO
         self.player = pygame.Vector2(480, 420)
         self.target = self.player.copy()
         self.canal_pasos = None
-        # Cargar sonido de pasos usando AudioManager
+        # Cargar sonidos usando AudioManager
         self.audio.load_sound("pasos", sfx_path("pasos", "mp3"))
+        self.audio.load_sound("abrir_puerta", sfx_path("abrir_puerta", "mp3"))
+        self.audio.load_sound("cerrar_puerta", sfx_path("cerrar_puerta", "mp3"))
+        if self.audio.enabled and "abrir_puerta" in self.audio.sounds:
+            self.audio.sounds["abrir_puerta"].set_volume(0.15)
+        if self.audio.enabled and "cerrar_puerta" in self.audio.sounds:
+            self.audio.sounds["cerrar_puerta"].set_volume(0.15)
         self.pending_hotspot = None
         self.pending_item = None
         self.dialogue_choices = []
@@ -162,7 +168,7 @@ class GameScene(Scene):
         """Cambia de escena."""
         self._actualizar_audio_pasos(False)
         self.scene = scene
-        self.state = GameState.IDLE
+        self.state = EstadoJuego.INACTIVO
         self.pending_hotspot = None
         self.current_npc = None
         self.target = self.player.copy()
@@ -231,12 +237,12 @@ class GameScene(Scene):
 
     def _iniciar_interaccion(self, hotspot):
         """Inicia una interacción con un hotspot."""
-        if self.state in (GameState.DIALOGUE, GameState.WON):
+        if self.state in (EstadoJuego.DIALOGO, EstadoJuego.GANADO):
             return
         self.pending_hotspot = hotspot
         self.pending_item = self.inventory.selected if self.verb == "USAR" else None
         self.target = self._punto_caminable_mas_cercano(hotspot.rect.center)
-        self.state = GameState.WALKING
+        self.state = EstadoJuego.CAMINANDO
         if self.player.distance_to(self.target) < 13:
             self._llegar_al_hotspot()
 
@@ -244,7 +250,7 @@ class GameScene(Scene):
         """Lógica al llegar al hotspot."""
         hotspot = self.pending_hotspot
         self.pending_hotspot = None
-        self.state = GameState.INTERACTING
+        self.state = EstadoJuego.INTERACTUANDO
         if hotspot is not None:
             # Solo las luces y botones del faro se activan directamente (puzle)
             if hotspot.name in PuzzleManager.HOTSPOTS_LUCES_FARO:
@@ -252,8 +258,8 @@ class GameScene(Scene):
             else:
                 # Para todos los demás hotspots, usar el sistema normal de interacción con verbo
                 self._interact(hotspot.name, self.verb, self.pending_item)
-        if self.state == GameState.INTERACTING:
-            self.state = GameState.IDLE
+        if self.state == EstadoJuego.INTERACTUANDO:
+            self.state = EstadoJuego.INACTIVO
 
     def _look(self, name):
         """Acción de mirar."""
@@ -386,7 +392,7 @@ class GameScene(Scene):
 
     def _abrir_dialogo_bruno(self):
         """Abre diálogo con Bruno."""
-        self.state = GameState.DIALOGUE
+        self.state = EstadoJuego.DIALOGO
         self.current_npc = "bruno"
         self.dialogue_choices = [
             ("¿Qué pasó con esta isla?", "isla"),
@@ -398,7 +404,7 @@ class GameScene(Scene):
 
     def _abrir_dialogo_herrero(self):
         """Abre diálogo con el herrero."""
-        self.state = GameState.DIALOGUE
+        self.state = EstadoJuego.DIALOGO
         self.current_npc = "herrero"
         self.dialogue_choices = [
             ("¿Qué tal va el trabajo en el taller?", "trabajo"),
@@ -410,49 +416,49 @@ class GameScene(Scene):
     def _elegir_dialogo(self, choice):
         """Procesa la elección de diálogo."""
         if choice == "isla":
-            self._say("Bruno: «La niebla llegó y todos huyeron».", duration=0)
+            self._say("Bruno: «La niebla llegó y todos huyeron».", duration=3)
         elif choice == "orden":
-            self._say("Bruno: «Mi nota dice: Sol, Luna, Estrella, pero el mecanismo tiene sus secretos»", duration=0)
+            self._say("Bruno: «Mi nota dice: Sol, Luna, Estrella, pero el mecanismo tiene sus secretos»", duration=3)
         elif choice == "ayuda":
             if not self.inventory.has("Llave vieja"):
                 if not self.llave_disponible:
                     # Primera vez: ofrece la llave
-                    self._say("Bruno: «¡Toma! Esta llave vieja podría ser útil. ¡Llévatela!»", duration=0)
+                    self._say("Bruno: «¡Toma! Esta llave vieja podría ser útil. ¡Llévatela!»", duration=3)
                     self.llave_disponible = True
                     self._actualizar_hotspots_refugio()
                 else:
                     # Llave disponible pero no tomada: le recuerda dónde está
-                    self._say("Bruno: «La llave vieja está ahí sobre la mesa. ¡No la olvides!»", duration=0)
+                    self._say("Bruno: «La llave vieja está ahí sobre la mesa. ¡No la olvides!»", duration=3)
             else:
                 # Ya tiene la llave: texto alternativo
-                self._say("Bruno: «Ya tienes la llave vieja. Úsala bien, marinero».", duration=0)
+                self._say("Bruno: «Ya tienes la llave vieja. Úsala bien, marinero».", duration=3)
         elif choice == "trabajo":
-            self._say("Herrero: «Tranquilo, trabajo en la mesada. Siempre hay algo que arreglar».", duration=0)
+            self._say("Herrero: «Tranquilo, trabajo en la mesada. Siempre hay algo que arreglar».", duration=3)
         elif choice == "armar_llave":
             if self.inventory.has("Llave maestra"):
                 # Ya tiene la llave maestra: texto alternativo
-                self._say("Herrero: «Ya tienes la llave maestra. ¡Ve a abrir ese faro!»", duration=0)
+                self._say("Herrero: «Ya tienes la llave maestra. ¡Ve a abrir ese faro!»", duration=3)
             elif self.inventory.has("Barra de hierro") and self.inventory.has("Llave vieja"):
                 # Tiene ambos materiales: crea la llave maestra
                 self.inventory.remove("Barra de hierro")
                 self.inventory.remove("Llave vieja")
                 self.inventory.add(Item("Llave maestra", description="Una llave maestra forjada por el herrero."))
-                self._say("Herrero: «Doblo la barra de hierro y la uno con la llave vieja. Aquí tienes tu llave maestra».", duration=0)
+                self._say("Herrero: «Doblo la barra de hierro y la uno con la llave vieja. Aquí tienes tu llave maestra».", duration=3)
             else:
                 # No tiene los materiales: le dice qué falta
                 if not self.inventory.has("Barra de hierro") and not self.inventory.has("Llave vieja"):
-                    self._say("Herrero: «Necesito la barra de hierro y la llave vieja para armar algo».", duration=0)
+                    self._say("Herrero: «Necesito la barra de hierro y la llave vieja para armar algo».", duration=3)
                 elif not self.inventory.has("Barra de hierro"):
-                    self._say("Herrero: «Tengo la llave vieja, pero me falta la barra de hierro».", duration=0)
+                    self._say("Herrero: «Tengo la llave vieja, pero me falta la barra de hierro».", duration=3)
                 elif not self.inventory.has("Llave vieja"):
-                    self._say("Herrero: «Tengo la barra de hierro, pero me falta la llave vieja».", duration=0)
+                    self._say("Herrero: «Tengo la barra de hierro, pero me falta la llave vieja».", duration=3)
         elif choice == "volver":
             if self.current_npc == "bruno":
                 self._abrir_dialogo_bruno()
             elif self.current_npc == "herrero":
                 self._abrir_dialogo_herrero()
         elif choice == "salir":
-            self.state = GameState.IDLE
+            self.state = EstadoJuego.INACTIVO
             self.dialogue.clear_message()
             self.current_npc = None
             return
@@ -466,8 +472,10 @@ class GameScene(Scene):
         """Activa un hotspot (cambio de escena, uso de objeto, etc.)."""
         # Puertas y salidas: cambio de escena directo
         if self.scene == "isla" and name == "Puerta del refugio":
+            self.audio.play_sound("abrir_puerta")
             self._cambiar_escena("refugio", starting_position=(160, 430))
         elif self.scene == "isla" and name == "Puerta de la herreria":
+            self.audio.play_sound("abrir_puerta")
             self._cambiar_escena("herreria", starting_position=(480, 430))
         elif self.scene == "isla" and name == "Camino al faro":
             self._cambiar_escena("faro", starting_position=(170, 435))
@@ -479,8 +487,10 @@ class GameScene(Scene):
             else:
                 self._say("La compuerta está cerrada. Necesito la tarjeta de acceso.")
         elif self.scene == "refugio" and name == "Salir a la isla":
+            self.audio.play_sound("cerrar_puerta")
             self._cambiar_escena("isla", starting_position=(230, 420))
         elif self.scene == "herreria" and name == "Salir a la isla":
+            self.audio.play_sound("cerrar_puerta")
             self._cambiar_escena("isla", starting_position=(830, 425))
         elif self.scene == "faro" and name == "Volver al puerto":
             self._cambiar_escena("isla", starting_position=(830, 425))
@@ -488,10 +498,12 @@ class GameScene(Scene):
             if not self.faro_desbloqueado:
                 self._say("La puerta del faro está cerrada. La cerradura espera una llave.")
             else:
+                self.audio.play_sound("abrir_puerta")
                 self._cambiar_escena("faro_interior", starting_position=(480, 420))
                 if not self.puzle_luces_resuelto:
                     self._say("Dentro, las tres luces esperan el orden correcto.")
         elif self.scene == "faro_interior" and name == "Bajar":
+            self.audio.play_sound("cerrar_puerta")
             self._cambiar_escena("faro", starting_position=(420, 400))
         elif self.scene == "faro_interior" and name == "Cielo nocturno":
             if self.puzle_luces_resuelto:
@@ -531,7 +543,7 @@ class GameScene(Scene):
             else:
                 self._say("El interruptor no responde. Primero debo ordenar las tres luces.")
         elif self.scene == "bunker_interior" and name == "Caja fuerte":
-            self.state = GameState.KEYPAD
+            self.state = EstadoJuego.TECLADO
             self.entrada_teclado = ""
             self._say("Ingresa el código de 4 dígitos:", duration=0)
         elif self.scene == "bunker_interior" and name == "Palanca secreta":
@@ -570,8 +582,8 @@ class GameScene(Scene):
         for event in events:
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
-                    if self.state == GameState.DIALOGUE:
-                        self.state = GameState.IDLE
+                    if self.state == EstadoJuego.DIALOGO:
+                        self.state = EstadoJuego.INACTIVO
                         self.dialogue.clear_message()
                         self.current_npc = None
                     else:
@@ -580,7 +592,7 @@ class GameScene(Scene):
                     self.depurar_puntos = not self.depurar_puntos
                 elif event.key in (pygame.K_1, pygame.K_2, pygame.K_3, pygame.K_4):
                     self.verb = ("MIRAR", "USAR", "HABLAR", "COGER")[event.key - pygame.K_1]
-                elif event.key == pygame.K_r and self.state == GameState.WON:
+                elif event.key == pygame.K_r and self.state == EstadoJuego.GANADO:
                     # Reiniciar juego
                     self.__init__(self.game)
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
@@ -592,16 +604,16 @@ class GameScene(Scene):
 
     def _manejar_click(self, position):
         """Maneja clics del mouse."""
-        if self.state == GameState.WON:
+        if self.state == EstadoJuego.GANADO:
             self.game.change_scene("victory")
             return
-        if self.state == GameState.DIALOGUE:
+        if self.state == EstadoJuego.DIALOGO:
             self._click_dialogo(position)
             return
-        if self.state == GameState.KEYPAD:
+        if self.state == EstadoJuego.TECLADO:
             self._click_teclado(position)
             return
-        if position[1] >= UI_TOP:
+        if position[1] >= INICIO_UI:
             self._click_ui(position)
             return
 
@@ -615,13 +627,13 @@ class GameScene(Scene):
         # Si no se clickeó en ningún hotspot, caminar hacia esa posición
         self.pending_hotspot = None
         self.target = self._punto_caminable_mas_cercano(position)
-        self.state = GameState.WALKING
+        self.state = EstadoJuego.CAMINANDO
 
     def _click_ui(self, position):
         """Maneja clics en la UI."""
         x, y = position
         button_width, button_height = 98, 40
-        verbs_origin = (18, UI_TOP + 41)
+        verbs_origin = (18, INICIO_UI + 41)
         for index, verb in enumerate(("MIRAR", "USAR", "HABLAR", "COGER")):
             rect = pygame.Rect(verbs_origin[0] + index * (button_width + 7),
                                verbs_origin[1], button_width, button_height)
@@ -629,7 +641,7 @@ class GameScene(Scene):
                 self.verb = verb
                 return
         slot, gap = 78, 8
-        inventory_origin = (475, UI_TOP + 43)
+        inventory_origin = (475, INICIO_UI + 43)
         for index, item in enumerate(self.inventory.items):
             rect = pygame.Rect(inventory_origin[0] + index * (slot + gap),
                                inventory_origin[1], slot, 76)
@@ -644,7 +656,7 @@ class GameScene(Scene):
                     self.inventory.select(item.name)
                     self.verb = "USAR"
                 return
-        if x < 455 and y > UI_TOP + 90:
+        if x < 455 and y > INICIO_UI + 90:
             self.verb = "MIRAR"
 
     def _click_dialogo(self, position):
@@ -698,8 +710,8 @@ class GameScene(Scene):
         buttons_height = 4 * (button_size + gap) - gap
         panel_height = padding_top + padding_bottom + 25 + 45 + 10 + buttons_height
 
-        keypad_x = (SCREEN_WIDTH - panel_width) // 2
-        keypad_y = (SCREEN_HEIGHT - panel_height) // 2
+        keypad_x = (ANCHO_VENTANA - panel_width) // 2
+        keypad_y = (ALTO_VENTANA - panel_height) // 2
 
         panel_rect = pygame.Rect(keypad_x, keypad_y, panel_width, panel_height)
         if not panel_rect.collidepoint(position):
@@ -741,7 +753,7 @@ class GameScene(Scene):
                 # Verificar código con callback de Game Over
                 if PuzzleManager.verificar_codigo_bunker(self.entrada_teclado, self._trigger_game_over):
                     self.caja_fuerte_abierta = True
-                    self.state = GameState.IDLE
+                    self.state = EstadoJuego.INACTIVO
                     self.dialogue.clear_message()
                     self._say("¡Código correcto!. Ahora puedes usar la palanca secreta.")
                 # Nota: si el código es incorrecto, el callback ya disparó Game Over
@@ -753,7 +765,7 @@ class GameScene(Scene):
         btn_y = btn_start_y + 3 * (button_size + gap)
         rect = pygame.Rect(btn_x, btn_y, button_size, button_size)
         if rect.collidepoint(position):
-            self.state = GameState.IDLE
+            self.state = EstadoJuego.INACTIVO
             self.dialogue.clear_message()
             self.entrada_teclado = ""
             return
@@ -761,7 +773,7 @@ class GameScene(Scene):
     def update(self):
         """Actualiza la lógica del juego."""
         self.dialogue.update()
-        if self.state == GameState.WALKING:
+        if self.state == EstadoJuego.CAMINANDO:
             offset = self.target - self.player
             distance = offset.length()
             if distance <= 4:
@@ -770,7 +782,7 @@ class GameScene(Scene):
                 if self.pending_hotspot is not None:
                     self._llegar_al_hotspot()
                 else:
-                    self.state = GameState.IDLE
+                    self.state = EstadoJuego.INACTIVO
             elif distance > 0:
                 self._actualizar_audio_pasos(True)
                 self.player += offset.normalize() * min(3.4, distance)
@@ -779,7 +791,7 @@ class GameScene(Scene):
 
     def draw(self, surface):
         """Renderiza el juego delegando a las escenas correspondientes."""
-        surface.fill(INK)
+        surface.fill(AZUL_OSCURO)
 
         # Delegar dibujo a la escena correspondiente
         if self.scene == "isla":
@@ -806,9 +818,9 @@ class GameScene(Scene):
             for hotspot in self.hotspots[self.scene]:
                 pygame.draw.rect(surface, (255, 255, 0), hotspot.rect, 2)
 
-        if self.state == GameState.DIALOGUE:
+        if self.state == EstadoJuego.DIALOGO:
             self._dibujar_opciones_dialogo(self.dialogue_choices)
-        elif self.state == GameState.KEYPAD:
+        elif self.state == EstadoJuego.TECLADO:
             self._dibujar_teclado(self.entrada_teclado)
 
         # Dibujar HUD de vidas (corazón)
@@ -861,7 +873,7 @@ class GameScene(Scene):
 
             # Panel con mayor contraste para mejor legibilidad del texto
             pygame.draw.rect(self.game.screen, (12, 15, 28), panel, border_radius=4)
-            pygame.draw.rect(self.game.screen, GOLD, panel, 2, border_radius=4)
+            pygame.draw.rect(self.game.screen, DORADO, panel, 2, border_radius=4)
 
             # Centrar verticalmente el texto dentro del panel
             total_height = len(lines) * 24
@@ -875,30 +887,30 @@ class GameScene(Scene):
 
     def _dibujar_interfaz(self, verbs, verb, inventory):
         """Dibuja la interfaz de usuario (verbos e inventario)."""
-        pygame.draw.rect(self.game.screen, (23, 22, 32), (0, UI_TOP, SCREEN_WIDTH, SCREEN_HEIGHT - UI_TOP))
-        pygame.draw.line(self.game.screen, GOLD, (0, UI_TOP), (SCREEN_WIDTH, UI_TOP), 3)
-        pygame.draw.rect(self.game.screen, PANEL, (12, UI_TOP + 10, 430, 128))
-        pygame.draw.rect(self.game.screen, GOLD, (12, UI_TOP + 10, 430, 128), 2)
-        self._draw_text("ACCIONES", (27, UI_TOP + 25), self.small_font, GOLD)
+        pygame.draw.rect(self.game.screen, (23, 22, 32), (0, INICIO_UI, ANCHO_VENTANA, ALTO_VENTANA - INICIO_UI))
+        pygame.draw.line(self.game.screen, DORADO, (0, INICIO_UI), (ANCHO_VENTANA, INICIO_UI), 3)
+        pygame.draw.rect(self.game.screen, PANEL, (12, INICIO_UI + 10, 430, 128))
+        pygame.draw.rect(self.game.screen, DORADO, (12, INICIO_UI + 10, 430, 128), 2)
+        self._draw_text("ACCIONES", (27, INICIO_UI + 25), self.small_font, DORADO)
         button_width, button_height = 92, 40
         for index, v in enumerate(verbs):
-            rect = pygame.Rect(22 + index * (button_width + 14), UI_TOP + 47, button_width, button_height)
+            rect = pygame.Rect(22 + index * (button_width + 14), INICIO_UI + 47, button_width, button_height)
             active = verb == v
             pygame.draw.rect(self.game.screen, (111, 78, 47) if active else (58, 52, 54), rect)
-            pygame.draw.rect(self.game.screen, GOLD if active else (114, 102, 86), rect, 2)
-            self._draw_text(v, rect.center, self.font, PAPER, centered=True)
-        self._draw_text("1-4", (412, UI_TOP + 112), self.small_font, (161, 151, 134), centered=True)
-        pygame.draw.rect(self.game.screen, PANEL, (457, UI_TOP + 10, 490, 128))
-        pygame.draw.rect(self.game.screen, GOLD, (457, UI_TOP + 10, 490, 128), 2)
-        self._draw_text("INVENTARIO", (472, UI_TOP + 25), self.small_font, GOLD)
+            pygame.draw.rect(self.game.screen, DORADO if active else (114, 102, 86), rect, 2)
+            self._draw_text(v, rect.center, self.font, PAPEL, centered=True)
+        self._draw_text("1-4", (412, INICIO_UI + 112), self.small_font, (161, 151, 134), centered=True)
+        pygame.draw.rect(self.game.screen, PANEL, (457, INICIO_UI + 10, 490, 128))
+        pygame.draw.rect(self.game.screen, DORADO, (457, INICIO_UI + 10, 490, 128), 2)
+        self._draw_text("INVENTARIO", (472, INICIO_UI + 25), self.small_font, DORADO)
         if inventory.selected is not None:
             self._draw_text("Usando: " + inventory.selected.name,
-                            (931, UI_TOP + 25), self.small_font, PAPER, right=True)
+                            (931, INICIO_UI + 25), self.small_font, PAPEL, right=True)
         slot, gap = 78, 12
         for index in range(inventory.capacity):
-            rect = pygame.Rect(483 + index * (slot + gap), UI_TOP + 47, slot, 76)
+            rect = pygame.Rect(483 + index * (slot + gap), INICIO_UI + 47, slot, 76)
             pygame.draw.rect(self.game.screen, (55, 49, 48), rect)
-            pygame.draw.rect(self.game.screen, GOLD if (
+            pygame.draw.rect(self.game.screen, DORADO if (
                 index < len(inventory.items) and
                 inventory.items[index] is inventory.selected
             ) else (117, 100, 75), rect, 2)
@@ -935,7 +947,7 @@ class GameScene(Scene):
         # Calcular altura total del panel
         total_lines = sum(len(lines) for lines in option_lines)
         panel_height = 50 + total_lines * option_height
-        panel_y = max(100, (SCREEN_HEIGHT - panel_height) // 2)  # Centrado verticalmente
+        panel_y = max(100, (ALTO_VENTANA - panel_height) // 2)  # Centrado verticalmente
 
         panel = pygame.Rect(280, panel_y, panel_width, panel_height)
 
@@ -947,7 +959,7 @@ class GameScene(Scene):
         self.game.screen.blit(overlay, (panel.x - 20, panel.y - 20))
 
         pygame.draw.rect(self.game.screen, (34, 30, 37), panel, border_radius=6)
-        pygame.draw.rect(self.game.screen, GOLD, panel, 3, border_radius=6)
+        pygame.draw.rect(self.game.screen, DORADO, panel, 3, border_radius=6)
 
         # Dibujar cada opción con sus líneas
         current_y = panel_y + 20
@@ -961,13 +973,13 @@ class GameScene(Scene):
             for line_index, line in enumerate(lines):
                 self._draw_text("› " + line if line_index == 0 else "  " + line,
                                (rect.x + 12, current_y + line_index * option_height + option_height // 2 - 6),
-                               self.font, PAPER)
+                               self.font, PAPEL)
             current_y += len(lines) * option_height
 
     def _dibujar_teclado(self, input_text):
         """Dibuja el teclado numérico para la caja fuerte."""
         # Overlay oscuro
-        overlay = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.SRCALPHA)
+        overlay = pygame.Surface((ANCHO_VENTANA, ALTO_VENTANA), pygame.SRCALPHA)
         overlay.fill((5, 7, 17, 150))
         self.game.screen.blit(overlay, (0, 0))
 
@@ -985,17 +997,17 @@ class GameScene(Scene):
         panel_height = padding_top + padding_bottom + 25 + 45 + 10 + buttons_height
 
         # Centrar el panel en la pantalla
-        keypad_x = (SCREEN_WIDTH - panel_width) // 2
-        keypad_y = (SCREEN_HEIGHT - panel_height) // 2
+        keypad_x = (ANCHO_VENTANA - panel_width) // 2
+        keypad_y = (ALTO_VENTANA - panel_height) // 2
 
         # Panel de fondo con padding asimétrico
         panel = pygame.Rect(keypad_x, keypad_y, panel_width, panel_height)
         pygame.draw.rect(self.game.screen, (34, 30, 37), panel, border_radius=10)
-        pygame.draw.rect(self.game.screen, GOLD, panel, 4, border_radius=10)
+        pygame.draw.rect(self.game.screen, DORADO, panel, 4, border_radius=10)
 
         # Título del panel - con padding superior y fuente más grande
         self._draw_text("CÓDIGO DE ACCESO", (keypad_x + panel_width // 2, keypad_y + padding_top - 2),
-                       self.large_font, GOLD, centered=True)
+                       self.large_font, DORADO, centered=True)
 
         # Display del código ingresado - un solo rectángulo con guiones bajos separados
         display_rect = pygame.Rect(keypad_x + padding_left, keypad_y + padding_top + 25, panel_width - padding_left - padding_right, 45)
@@ -1031,7 +1043,7 @@ class GameScene(Scene):
                 pygame.draw.rect(self.game.screen, (72, 55, 43), rect, border_radius=6)
                 pygame.draw.rect(self.game.screen, (98, 82, 65), rect, 3, border_radius=6)
                 self._draw_text(str(num), (btn_x + button_size // 2, btn_y + button_size // 2),
-                               self.large_font, PAPER, centered=True)
+                               self.large_font, PAPEL, centered=True)
 
         # Botón 0
         btn_x = keypad_x + padding_left + (button_size + gap)
@@ -1040,7 +1052,7 @@ class GameScene(Scene):
         pygame.draw.rect(self.game.screen, (72, 55, 43), rect, border_radius=6)
         pygame.draw.rect(self.game.screen, (98, 82, 65), rect, 3, border_radius=6)
         self._draw_text("0", (btn_x + button_size // 2, btn_y + button_size // 2),
-                       self.large_font, PAPER, centered=True)
+                       self.large_font, PAPEL, centered=True)
 
         # Botón Borrar (X)
         btn_x = keypad_x + padding_left
@@ -1049,7 +1061,7 @@ class GameScene(Scene):
         pygame.draw.rect(self.game.screen, (145, 55, 55), rect, border_radius=6)
         pygame.draw.rect(self.game.screen, (175, 75, 75), rect, 3, border_radius=6)
         self._draw_text("X", (btn_x + button_size // 2, btn_y + button_size // 2),
-                       self.large_font, PAPER, centered=True)
+                       self.large_font, PAPEL, centered=True)
 
         # Botón Enter/Aceptar (OK)
         btn_x = keypad_x + padding_left + 2 * (button_size + gap)
@@ -1058,7 +1070,7 @@ class GameScene(Scene):
         pygame.draw.rect(self.game.screen, (55, 145, 95), rect, border_radius=6)
         pygame.draw.rect(self.game.screen, (75, 175, 115), rect, 3, border_radius=6)
         self._draw_text("OK", (btn_x + button_size // 2, btn_y + button_size // 2),
-                       self.large_font, PAPER, centered=True)
+                       self.large_font, PAPEL, centered=True)
 
         # Botón Cancelar (C)
         btn_x = keypad_x + padding_left + 3 * (button_size + gap)
@@ -1067,63 +1079,43 @@ class GameScene(Scene):
         pygame.draw.rect(self.game.screen, (145, 95, 55), rect, border_radius=6)
         pygame.draw.rect(self.game.screen, (175, 115, 75), rect, 3, border_radius=6)
         self._draw_text("C", (btn_x + button_size // 2, btn_y + button_size // 2),
-                       self.large_font, PAPER, centered=True)
+                       self.large_font, PAPEL, centered=True)
 
     def _draw_item_icon(self, name, x, y):
         """Dibuja el icono de un item en el inventario."""
-        # Ítems centrados en (x, y) con diseño equilibrado
         if name == "Barra de hierro":
-            # Barra más fina y elegante (ancho reducido de 18 a 10)
             pygame.draw.rect(self.game.screen, (145, 145, 155), (x - 5, y - 22, 10, 44))
             pygame.draw.rect(self.game.screen, (178, 178, 188), (x - 5, y - 22, 10, 44), 2)
             pygame.draw.circle(self.game.screen, (168, 145, 125), (x, y), 4)
         elif name == "Llave vieja":
-            # Centro visual total: círculo radio 12 (izq) + cuerpo 24 + punta 6 = 42px total
-            # Centro visual en x: desplazado 4px a la izquierda para compensar
             offset_x = x - 4
-            # Círculo con muesca/ranura para mejor diseño
             pygame.draw.circle(self.game.screen, (168, 145, 118), (offset_x - 8, y), 12)
             pygame.draw.circle(self.game.screen, (145, 125, 98), (offset_x - 8, y), 12, 2)
-            # Ranura en el anillo (detalle estético)
             pygame.draw.circle(self.game.screen, (130, 110, 85), (offset_x - 8, y), 5, 2)
-            # Cuerpo extendiéndose hacia la derecha
             pygame.draw.rect(self.game.screen, (168, 145, 118), (offset_x + 4, y - 3, 22, 6))
             pygame.draw.rect(self.game.screen, (145, 125, 98), (offset_x + 4, y - 3, 22, 6), 2)
-            # Punta a la derecha con doble línea
             pygame.draw.rect(self.game.screen, (168, 145, 118), (offset_x + 26, y - 2, 6, 10))
             pygame.draw.rect(self.game.screen, (145, 125, 98), (offset_x + 26, y - 2, 6, 10), 2)
-            # Detalle de bisel en la punta
             pygame.draw.line(self.game.screen, (185, 165, 135), (offset_x + 26, y - 2), (offset_x + 26, y + 8), 1)
         elif name == "Llave maestra":
-            # Centro visual total: mismo cálculo que llave vieja
             offset_x = x - 4
-            # Círculo con ranura decorativa
             pygame.draw.circle(self.game.screen, (218, 185, 118), (offset_x - 8, y), 12)
             pygame.draw.circle(self.game.screen, (198, 165, 98), (offset_x - 8, y), 12, 2)
-            # Ranura en el anillo
             pygame.draw.circle(self.game.screen, (175, 145, 85), (offset_x - 8, y), 5, 2)
-            # Cuerpo con borde oscuro para volumen
             pygame.draw.rect(self.game.screen, (218, 185, 118), (offset_x + 4, y - 3, 22, 6))
             pygame.draw.rect(self.game.screen, (198, 165, 98), (offset_x + 4, y - 3, 22, 6), 2)
-            # Punta con detalle
             pygame.draw.rect(self.game.screen, (218, 185, 118), (offset_x + 26, y - 2, 6, 10))
             pygame.draw.rect(self.game.screen, (198, 165, 98), (offset_x + 26, y - 2, 6, 10), 2)
-            # Bisel en la punta
             pygame.draw.line(self.game.screen, (235, 205, 135), (offset_x + 26, y - 2), (offset_x + 26, y + 8), 1)
-            # Decoración dorada en el centro del círculo
             pygame.draw.circle(self.game.screen, (248, 212, 138), (offset_x - 8, y), 4)
             pygame.draw.circle(self.game.screen, (230, 195, 120), (offset_x - 8, y), 4, 1)
         elif name == "Tarjeta de acceso":
-            # Tarjeta rectangular centrada
             pygame.draw.rect(self.game.screen, (178, 185, 195), (x - 20, y - 12, 40, 24))
             pygame.draw.rect(self.game.screen, (145, 152, 162), (x - 20, y - 12, 40, 24), 2)
-            # Banda magnética
             pygame.draw.rect(self.game.screen, (42, 42, 52), (x - 18, y + 2, 36, 8))
-            # Chip
             pygame.draw.rect(self.game.screen, (168, 165, 155), (x - 15, y - 9, 10, 8))
             pygame.draw.rect(self.game.screen, (145, 142, 132), (x - 15, y - 9, 10, 8), 1)
         else:
-            # Ítem genérico centrado
             pygame.draw.rect(self.game.screen, (168, 157, 126), (x - 8, y - 24, 16, 48))
             pygame.draw.circle(self.game.screen, (230, 192, 108), (x, y - 24), 10)
             pygame.draw.rect(self.game.screen, (230, 192, 108), (x + 8, y + 10, 18, 6))
@@ -1143,7 +1135,6 @@ class GameScene(Scene):
         """Dibuja el cursor personalizado en la posición actual del mouse."""
         mouse_pos = pygame.mouse.get_pos()
         if self.cursor_image is not None:
-            # Usar blit directo con optimización - el cursor debe ser lo último en dibujarse
             self.game.screen.blit(self.cursor_image, mouse_pos)
         else:
             # Cursor de respaldo si la imagen no carga
@@ -1162,7 +1153,7 @@ class GameScene(Scene):
             separation = 8
 
             total_width = text_width + separation + heart_width
-            x = SCREEN_WIDTH - total_width - margin
+            x = ANCHO_VENTANA - total_width - margin
             y = 12
 
             self.game.screen.blit(lives_text, (x, y))

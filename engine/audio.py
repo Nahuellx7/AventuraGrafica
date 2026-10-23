@@ -77,3 +77,15 @@ class AudioManager:
         if not self.enabled:
             return
         pygame.mixer.music.stop()
+
+    def pause_music(self):
+        """Pausa la música de fondo actual."""
+        if not self.enabled:
+            return
+        pygame.mixer.music.pause()
+
+    def unpause_music(self):
+        """Reanuda la música de fondo pausada."""
+        if not self.enabled:
+            return
+        pygame.mixer.music.unpause()

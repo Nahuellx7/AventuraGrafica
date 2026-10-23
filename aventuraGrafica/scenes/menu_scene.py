@@ -30,6 +30,9 @@ class MenuScene(Scene):
         # Generar estrellas para el fondo
         self.stars = self._generate_stars()
 
+        # Crear botones iniciales
+        self._crear_botones()
+
         # Animación
         self.t = 0.0
 
@@ -47,7 +50,8 @@ class MenuScene(Scene):
             stars.append({'x': x, 'y': y, 'size': size, 'brightness': brightness, 'speed': twinkle_speed})
         return stars
 
-        # Botones según el estado del juego
+    def _crear_botones(self):
+        """Crea los botones según el estado del juego."""
         if self.game_started:
             self.boton_reanudar = Button(
                 330, 330, 300, 60, "Reanudar", self.reanudar_juego,
@@ -70,9 +74,6 @@ class MenuScene(Scene):
                 330, 430, 300, 60, "Salir", self.salir,
                 font_size=36, color=(220, 90, 90), hover_color=(240, 110, 110)
             )
-
-        # Variable de animación
-        self.t = 0.0
 
     def on_enter(self):
         """Se ejecuta al entrar al menú."""
@@ -80,35 +81,20 @@ class MenuScene(Scene):
         # Actualizar estado del juego
         self.game_started = hasattr(self.game, 'game_scene') and self.game.game_scene is not None
         # Recrear botones según el estado
-        if self.game_started:
-            self.boton_reanudar = Button(
-                330, 330, 300, 60, "Reanudar", self.reanudar_juego,
-                font_size=36, color=(90, 150, 220), hover_color=(110, 170, 240)
-            )
-            self.boton_reiniciar = Button(
-                330, 410, 300, 60, "Reiniciar", self.reiniciar_juego,
-                font_size=36, color=(220, 160, 60), hover_color=(240, 180, 80)
-            )
-            self.boton_salir = Button(
-                330, 490, 300, 60, "Salir", self.salir,
-                font_size=36, color=(220, 90, 90), hover_color=(240, 110, 110)
-            )
-        else:
-            self.boton_comenzar = Button(
-                330, 350, 300, 60, "Empezar", self.comenzar_juego,
-                font_size=36, color=(90, 150, 220), hover_color=(110, 170, 240)
-            )
-            self.boton_salir = Button(
-                330, 430, 300, 60, "Salir", self.salir,
-                font_size=36, color=(220, 90, 90), hover_color=(240, 110, 110)
-            )
+        self._crear_botones()
         # Desactivar cursor nativo (usaremos cursor personalizado)
         pygame.mouse.set_visible(False)
-        # Cargar y reproducir música del menú
-        if hasattr(self.game, 'audio') and self.game.audio.enabled:
+        # Cargar y reproducir música del menú solo si no hay juego en pausa
+        if not self.game_started and hasattr(self.game, 'audio') and self.game.audio.enabled:
             try:
                 self.game.audio.load_music(music_path("menu_principal", "mp3"))
                 self.game.audio.play_music(loops=-1, volume=0.3)
+            except Exception as e:
+                pass
+        # Si hay juego en pausa, detener cualquier música de fondo previa
+        elif self.game_started and hasattr(self.game, 'audio') and self.game.audio.enabled:
+            try:
+                self.game.audio.stop_music()
             except Exception as e:
                 pass
 
@@ -213,7 +199,7 @@ class MenuScene(Scene):
 
     def draw(self, surface):
         """Dibuja el menú principal."""
-        # Fondo con degradado épico (azul oscuro a dorado) - más brillante
+        # Fondo azul oscuro a dorado
         for y in range(0, surface.get_height(), 4):
             progress = y / surface.get_height()
             r = int(25 + progress * 120)
@@ -221,7 +207,7 @@ class MenuScene(Scene):
             b = int(50 + progress * 80)
             pygame.draw.rect(surface, (r, g, b), (0, y, surface.get_width(), 4))
 
-        # Estrellas titilantes
+        # Estrellas
         for star in self.stars:
             twinkle = int((pygame.math.Vector2(1, 1).length() * 0.5 + 0.5) * 50)
             brightness = min(255, star['brightness'] + twinkle)

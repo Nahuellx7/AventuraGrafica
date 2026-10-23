@@ -57,14 +57,14 @@ class IslaScene:
 
     def _draw_night_sky(self, base):
         """Dibuja el cielo nocturno."""
-        WORLD_HEIGHT = 490
-        SCREEN_WIDTH = 960
-        for y in range(0, WORLD_HEIGHT, 28):
+        ALTURA_JUEGO = 490
+        ANCHO_VENTANA = 960
+        for y in range(0, ALTURA_JUEGO, 28):
             shade = min(28, y // 18)
             color = (base[0] + shade, base[1] + shade, min(100, base[2] + shade))
-            pygame.draw.rect(self.screen, color, (0, y, SCREEN_WIDTH, 28))
+            pygame.draw.rect(self.screen, color, (0, y, ANCHO_VENTANA, 28))
         for index in range(66):
-            x = (index * 157 + 43) % SCREEN_WIDTH
+            x = (index * 157 + 43) % ANCHO_VENTANA
             y = (index * 71 + 17) % 245
             size = 2 if index % 5 else 3
             pygame.draw.rect(self.screen, (225, 220, 187), (x, y, size, size))
@@ -197,10 +197,10 @@ class IslaScene:
 
     def _draw_cobblestones(self, start_y, end_y):
         """Dibuja adoquines."""
-        SCREEN_WIDTH = 960
+        ANCHO_VENTANA = 960
         for row, y in enumerate(range(start_y, end_y, 25)):
             offset = -35 if row % 2 else 0
-            for x in range(offset, SCREEN_WIDTH, 70):
+            for x in range(offset, ANCHO_VENTANA, 70):
                 stone = pygame.Rect(x + row % 3 * 4, y, 63, 20)
                 pygame.draw.rect(self.screen, (73, 69, 88), stone, border_radius=4)
                 pygame.draw.line(self.screen, (97, 91, 107), (stone.x + 8, y + 3),

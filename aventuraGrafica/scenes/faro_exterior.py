@@ -56,14 +56,14 @@ class FaroExteriorScene:
 
     def _draw_night_sky(self, base):
         """Dibuja el cielo nocturno."""
-        WORLD_HEIGHT = 490
-        SCREEN_WIDTH = 960
-        for y in range(0, WORLD_HEIGHT, 28):
+        ALTURA_JUEGO = 490
+        ANCHO_VENTANA = 960
+        for y in range(0, ALTURA_JUEGO, 28):
             shade = min(28, y // 18)
             color = (base[0] + shade, base[1] + shade, min(100, base[2] + shade))
-            pygame.draw.rect(self.screen, color, (0, y, SCREEN_WIDTH, 28))
+            pygame.draw.rect(self.screen, color, (0, y, ANCHO_VENTANA, 28))
         for index in range(66):
-            x = (index * 157 + 43) % SCREEN_WIDTH
+            x = (index * 157 + 43) % ANCHO_VENTANA
             y = (index * 71 + 17) % 245
             size = 2 if index % 5 else 3
             pygame.draw.rect(self.screen, (225, 220, 187), (x, y, size, size))
@@ -72,9 +72,9 @@ class FaroExteriorScene:
 
     def _draw_cliff_stones(self):
         """Dibuja piedras en el acantilado."""
-        SCREEN_WIDTH = 960
+        ANCHO_VENTANA = 960
         for index in range(28):
-            x = (index * 127 + 28) % SCREEN_WIDTH
+            x = (index * 127 + 28) % ANCHO_VENTANA
             y = 408 + (index * 43) % 70
             pygame.draw.rect(self.screen, (85 + index % 20, 82 + index % 15, 98 + index % 12),
                              (x, y, 23 + index % 17, 7), border_radius=2)

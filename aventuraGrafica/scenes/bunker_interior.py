@@ -37,14 +37,14 @@ class BunkerInteriorScene:
         """Dibuja la escena interior del bunker con la cámara secreta."""
         GOLD = (230, 184, 104)
         PAPER = (241, 220, 169)
-        WORLD_HEIGHT = 490
-        SCREEN_WIDTH = 960
+        ALTURA_JUEGO = 490
+        ANCHO_VENTANA = 960
 
         # Fondo de concreto oscuro
-        for y in range(0, WORLD_HEIGHT, 20):
+        for y in range(0, ALTURA_JUEGO, 20):
             shade = min(12, y // 40)
             color = (28 + shade, 28 + shade, 32 + shade)
-            pygame.draw.rect(self.screen, color, (0, y, SCREEN_WIDTH, 20))
+            pygame.draw.rect(self.screen, color, (0, y, ANCHO_VENTANA, 20))
 
         # Paredes de concreto con textura
         pygame.draw.rect(self.screen, (45, 45, 52), (50, 80, 860, 390))
@@ -100,8 +100,8 @@ class BunkerInteriorScene:
         pygame.draw.circle(self.screen, (168, 165, 158), (lever_x + 25, lever_y + 10), 8)
 
         # Piso
-        pygame.draw.rect(self.screen, (35, 35, 42), (0, 420, SCREEN_WIDTH, 70))
-        for x in range(0, SCREEN_WIDTH, 60):
+        pygame.draw.rect(self.screen, (35, 35, 42), (0, 420, ANCHO_VENTANA, 70))
+        for x in range(0, ANCHO_VENTANA, 60):
             pygame.draw.line(self.screen, (42, 42, 52), (x, 420), (x + 30, 490), 2)
 
         # Salida (escalera)

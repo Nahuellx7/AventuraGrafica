@@ -12,8 +12,9 @@ from aventuraGrafica.scenes.game_over_scene import GameOverScene
 
 
 # Constantes del juego
-SCREEN_WIDTH = 960
-SCREEN_HEIGHT = 640
+ANCHO_VENTANA = 960
+ALTO_VENTANA = 640
+ALTURA_JUEGO = 490
 FPS = 60
 
 
@@ -21,7 +22,7 @@ class AventuraGrafica(Game):
     """Controla la aventura usando el gestor de escenas del motor."""
 
     def __init__(self):
-        super().__init__(SCREEN_WIDTH, SCREEN_HEIGHT, "La Isla Olvidada - Aventura Gráfica", FPS)
+        super().__init__(ANCHO_VENTANA, ALTO_VENTANA, "La Isla Olvidada - Aventura Gráfica", FPS)
 
         self.game_dir = os.path.dirname(os.path.abspath(__file__))
 
