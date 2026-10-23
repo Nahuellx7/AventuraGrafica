@@ -3,6 +3,7 @@
 import os
 import pygame
 from engine.ui import Scene, Button
+from engine.shared_assets import music_path
 
 
 class MenuScene(Scene):
@@ -18,7 +19,7 @@ class MenuScene(Scene):
 
         # Cargar cursor personalizado
         try:
-            cursor_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "assets", "sprites", "pointer_b.png")
+            cursor_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "assets", "sprites", "pointer_b.png")
             self.cursor_image = pygame.image.load(cursor_path).convert_alpha()
         except:
             self.cursor_image = None
@@ -103,11 +104,12 @@ class MenuScene(Scene):
             )
         # Desactivar cursor nativo (usaremos cursor personalizado)
         pygame.mouse.set_visible(False)
-        # Si hay audio, reproducir música del menú
-        if hasattr(self.game, 'audio'):
+        # Cargar y reproducir música del menú
+        if hasattr(self.game, 'audio') and self.game.audio.enabled:
             try:
-                self.game.audio.play_music(volume=0.3)
-            except:
+                self.game.audio.load_music(music_path("menu_principal", "mp3"))
+                self.game.audio.play_music(loops=-1, volume=0.3)
+            except Exception as e:
                 pass
 
     def on_exit(self):
@@ -116,6 +118,13 @@ class MenuScene(Scene):
 
     def comenzar_juego(self):
         """Inicia el juego cambiando a la escena 'game'."""
+        # Detener música del menú
+        if hasattr(self.game, 'audio') and self.game.audio.enabled:
+            try:
+                self.game.audio.stop_music()
+            except:
+                pass
+
         # Reproducir sonido de click si existe
         if hasattr(self.game, 'audio'):
             try:
@@ -129,6 +138,13 @@ class MenuScene(Scene):
 
     def reanudar_juego(self):
         """Reanuda el juego existente."""
+        # Detener música del menú
+        if hasattr(self.game, 'audio') and self.game.audio.enabled:
+            try:
+                self.game.audio.stop_music()
+            except:
+                pass
+
         # Reproducir sonido de click si existe
         if hasattr(self.game, 'audio'):
             try:
@@ -141,6 +157,13 @@ class MenuScene(Scene):
 
     def reiniciar_juego(self):
         """Reinicia el juego desde el principio."""
+        # Detener música del menú
+        if hasattr(self.game, 'audio') and self.game.audio.enabled:
+            try:
+                self.game.audio.stop_music()
+            except:
+                pass
+
         # Reproducir sonido de click si existe
         if hasattr(self.game, 'audio'):
             try:

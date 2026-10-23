@@ -10,32 +10,47 @@ class GameOverScene(Scene):
 
     def __init__(self, game):
         super().__init__(game)
-        
+
         # Fuentes
         self.font_title = pygame.font.Font(None, 82)
         self.font_message = pygame.font.Font(None, 36)
         self.font_hint = pygame.font.Font(None, 26)
-        
+
         # Cargar cursor personalizado
         try:
-            cursor_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "assets", "sprites", "pointer_b.png")
+            cursor_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "assets", "sprites", "pointer_b.png")
             self.cursor_image = pygame.image.load(cursor_path).convert_alpha()
         except:
             self.cursor_image = None
-        
+
         # Botones
         self.boton_reintentar = Button(
             230, 350, 220, 60, "Reintentar", self.reintentar,
-            font_size=36, color=(80, 80, 100), hover_color=(100, 100, 120)
+            font_size=36, color=(90, 150, 220), hover_color=(110, 170, 240)
         )
-        
+
         self.boton_menu = Button(
             510, 350, 220, 60, "Menú Principal", self.volver_menu,
-            font_size=36, color=(80, 50, 50), hover_color=(100, 70, 70)
+            font_size=36, color=(220, 90, 90), hover_color=(240, 110, 110)
         )
-        
+
         # Animación
         self.t = 0.0
+        self.stars = self._generate_stars()
+
+    def _generate_stars(self):
+        """Genera estrellas para el fondo."""
+        import random
+        random.seed(99)
+        stars = []
+        for _ in range(80):
+            x = random.randint(0, 960)
+            y = random.randint(0, 640)
+            size = random.randint(1, 3)
+            brightness = random.randint(80, 120)
+            twinkle_speed = random.uniform(0.5, 2.0)
+            stars.append({'x': x, 'y': y, 'size': size, 'brightness': brightness, 'speed': twinkle_speed})
+        return stars
 
     def on_enter(self):
         """Se ejecuta al entrar a la escena de game over."""
@@ -60,6 +75,8 @@ class GameOverScene(Scene):
                 self.game.audio.play_sound("click")
             except:
                 pass
+        # Limpiar la referencia al game_scene para reiniciar completamente
+        self.game.game_scene = None
         # Cambiar a la escena del juego (reinicia el estado)
         self.game.change_scene("game")
 
@@ -91,68 +108,41 @@ class GameOverScene(Scene):
         self.t += 1.0 / self.game.fps
 
     def draw(self, surface):
-        """Dibuja la pantalla de game over."""
-        # Fondo oscuro con degradado
+        """Dibuja la pantalla de game over con el mismo estilo que el menú y victoria."""
+        # Fondo con degradado épico (azul oscuro a dorado) - más oscuro para game over
         for y in range(0, surface.get_height(), 4):
-            shade = int(15 + (y / surface.get_height()) * 10)
-            pygame.draw.rect(surface, (shade, shade + 5, shade + 10), (0, y, surface.get_width(), 4))
-        
-        # Dibujar estrellas (más tenues)
-        import random
-        random.seed(99)
-        for _ in range(80):
-            x = random.randint(0, surface.get_width())
-            y = random.randint(0, surface.get_height() - 150)
-            size = random.randint(1, 2)
-            brightness = random.randint(80, 120)
-            pygame.draw.circle(surface, (brightness, brightness, brightness), (x, y), size)
-        
-        # Luna gris (el faro sigue apagado)
-        moon_x = surface.get_width() // 2
-        moon_y = 120
-        pygame.draw.circle(surface, (100, 100, 120), (moon_x, moon_y), 60)
-        pygame.draw.circle(surface, (60, 60, 80), (moon_x + 15, moon_y - 10), 50)
-        
-        # Faro oscuro en el fondo
-        faro_x = surface.get_width() - 150
-        faro_y = surface.get_height() - 200
-        # Torre del faro
-        pygame.draw.rect(surface, (50, 45, 40), (faro_x - 20, faro_y, 40, 150))
-        pygame.draw.rect(surface, (40, 35, 30), (faro_x - 25, faro_y - 30, 50, 30))
-        # Luz del faro (apagada, muy oscura)
-        pygame.draw.circle(surface, (40, 40, 50), (faro_x, faro_y - 30), 15)
-        
+            progress = y / surface.get_height()
+            r = int(20 + progress * 80)
+            g = int(25 + progress * 60)
+            b = int(40 + progress * 50)
+            pygame.draw.rect(surface, (r, g, b), (0, y, surface.get_width(), 4))
+
+        # Estrellas titilantes (más tenues)
+        for star in self.stars:
+            twinkle = int((pygame.math.Vector2(1, 1).length() * 0.5 + 0.5) * 30)
+            brightness = min(200, star['brightness'] + twinkle)
+            pygame.draw.circle(surface, (brightness, brightness, brightness),
+                            (star['x'], star['y']), star['size'])
+
         # Título GAME OVER
-        title_surf = self.font_title.render("GAME OVER", True, (180, 60, 60))
+        title_surf = self.font_title.render("GAME OVER", True, (200, 80, 80))
         # Efecto de sombra
-        shadow_surf = self.font_title.render("GAME OVER", True, (100, 30, 30))
+        shadow_surf = self.font_title.render("GAME OVER", True, (100, 40, 40))
         surface.blit(shadow_surf, shadow_surf.get_rect(centerx=surface.get_width() // 2 + 3, y=80 + 3))
         surface.blit(title_surf, title_surf.get_rect(centerx=surface.get_width() // 2, y=80))
-        
-        # Mensaje
-        message_surf = self.font_message.render("El faro sigue apagado...", True, (150, 150, 170))
-        surface.blit(message_surf, message_surf.get_rect(centerx=surface.get_width() // 2, y=180))
-        
-        message_surf2 = self.font_message.render("La Isla Olvidada permanece en la oscuridad", True, (150, 150, 170))
-        surface.blit(message_surf2, message_surf2.get_rect(centerx=surface.get_width() // 2, y=220))
-        
-        # Panel con instrucciones
-        panel_rect = pygame.Rect(180, 260, 600, 70)
-        pygame.draw.rect(surface, (40, 45, 55), panel_rect, border_radius=8)
-        pygame.draw.rect(surface, (100, 70, 70), panel_rect, 2, border_radius=8)
-        
-        instruction_text = "Presiona R para reintentar o M para volver al menú"
-        instruction_surf = self.font_hint.render(instruction_text, True, (200, 200, 220))
-        surface.blit(instruction_surf, instruction_surf.get_rect(centerx=surface.get_width() // 2, y=295))
-        
+
+        # Subtítulo - Única línea de texto
+        message_surf = self.font_message.render("La combinación falló y la isla permanecerá en la oscuridad.", True, (180, 160, 140))
+        surface.blit(message_surf, message_surf.get_rect(centerx=surface.get_width() // 2, y=200))
+
         # Dibujar botones
         self.boton_reintentar.draw(surface)
         self.boton_menu.draw(surface)
-        
-        # Texto de hint adicional
-        hint_surf = self.font_hint.render("O haz clic en los botones", True, (120, 120, 140))
+
+        # Texto de hint
+        hint_surf = self.font_hint.render("Presiona R para reintentar o M para volver al menú", True, (200, 200, 220))
         surface.blit(hint_surf, hint_surf.get_rect(centerx=surface.get_width() // 2, y=450))
-        
+
         # Dibujar cursor personalizado al final
         mouse_pos = pygame.mouse.get_pos()
         if self.cursor_image:

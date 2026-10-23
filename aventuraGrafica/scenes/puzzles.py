@@ -6,7 +6,7 @@ class PuzzleManager:
 
     # Configuración del puzle del faro
     ORDEN_LUCES = ("sol", "luna", "estrella")
-    DIRECT_EXIT_HOTSPOTS = {
+    HOTSPOTS_LUCES_FARO = {
         "Luz de la luna",
         "Luz de la estrella",
         "Luz del sol",
@@ -19,17 +19,18 @@ class PuzzleManager:
     CODIGO_BUNKER = "4729"
 
     @staticmethod
-    def activar_lente(name, progreso_luces, say_callback):
+    def activar_luz(name, progreso_luces, say_callback, game_over_callback=None):
         """
-        Activa una lente del puzle del faro.
-        
+        Activa una luz del puzle del faro.
+
         Args:
-            name: Nombre de la lente activada
+            name: Nombre de la luz activada
             progreso_luces: Progreso actual del puzle
             say_callback: Función para mostrar mensajes
-            
+            game_over_callback: Función opcional para disparar Game Over (sistema de una sola vida)
+
         Returns:
-            Nuevo progreso del puzle
+            Nuevo progreso del puzle (None si se disparó Game Over)
         """
         if progreso_luces >= len(PuzzleManager.ORDEN_LUCES):
             return progreso_luces
@@ -50,20 +51,30 @@ class PuzzleManager:
                 remaining = len(PuzzleManager.ORDEN_LUCES) - progreso_luces
                 say_callback(f"Correcto. Faltan {remaining} luces por alinear.")
         else:
-            progreso_luces = 0
-            say_callback("El orden es incorrecto. Debes empezar de nuevo.")
+            # Sistema de una sola vida: fallo en el puzzle dispara Game Over inmediatamente
+            if game_over_callback:
+                game_over_callback()
+                return None  # Indica que se disparó Game Over
+            else:
+                progreso_luces = 0
+                say_callback("El orden es incorrecto. Debes empezar de nuevo.")
 
         return progreso_luces
 
     @staticmethod
-    def verificar_codigo_bunker(codigo_ingresado):
+    def verificar_codigo_bunker(codigo_ingresado, game_over_callback=None):
         """
         Verifica si el código ingresado es correcto.
-        
+
         Args:
             codigo_ingresado: Código de 4 dígitos ingresado
-            
+            game_over_callback: Función opcional para disparar Game Over (sistema de una sola vida)
+
         Returns:
             True si el código es correcto, False en caso contrario
         """
-        return codigo_ingresado == PuzzleManager.CODIGO_BUNKER
+        es_correcto = codigo_ingresado == PuzzleManager.CODIGO_BUNKER
+        # Sistema de una sola vida: código incorrecto dispara Game Over inmediatamente
+        if not es_correcto and game_over_callback:
+            game_over_callback()
+        return es_correcto

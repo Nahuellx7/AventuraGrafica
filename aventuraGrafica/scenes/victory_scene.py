@@ -6,7 +6,7 @@ from engine.ui import Scene, Button
 
 
 class VictoryScene(Scene):
-    """Pantalla de victoria full screen con mensaje épico."""
+    """Pantalla de victoria full screen con su mensaje."""
 
     def __init__(self, game):
         super().__init__(game)
@@ -19,7 +19,7 @@ class VictoryScene(Scene):
         
         # Cargar cursor personalizado
         try:
-            cursor_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "assets", "sprites", "pointer_b.png")
+            cursor_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "assets", "sprites", "pointer_b.png")
             self.cursor_image = pygame.image.load(cursor_path).convert_alpha()
         except:
             self.cursor_image = None

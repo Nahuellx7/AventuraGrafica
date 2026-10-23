@@ -8,6 +8,12 @@ from engine.hotspot import Hotspot
 class FaroInteriorScene:
     """Escena interior del faro con hotspots, polígono caminable y dibujo."""
 
+    # Constantes de color
+    GOLD = (230, 184, 104)
+    PAPER = (241, 220, 169)
+    SCREEN_WIDTH = 960
+    SCREEN_HEIGHT = 490
+
     # Hotspots del faro interior
     HOTSPOTS = [
         Hotspot((350, 420, 260, 60), "Bajar"),
@@ -43,17 +49,12 @@ class FaroInteriorScene:
 
     def draw(self, progreso_luces, inventory, puzle_luces_resuelto=False):
         """Dibuja la escena interior del faro con el panel de luces."""
-        GOLD = (230, 184, 104)
-        PAPER = (241, 220, 169)
-        WORLD_HEIGHT = 490
-        SCREEN_WIDTH = 960
-
         # CAPA 1: Fondo con ambiente de altura (ventana alta arqueada al fondo)
         # Degradado sutil de arriba a abajo
-        for y in range(0, WORLD_HEIGHT, 20):
+        for y in range(0, self.SCREEN_HEIGHT, 20):
             shade = min(15, y // 30)
             color = (28 + shade, 24 + shade, 35 + shade)
-            pygame.draw.rect(self.screen, color, (0, y, SCREEN_WIDTH, 20))
+            pygame.draw.rect(self.screen, color, (0, y, self.SCREEN_WIDTH, 20))
 
         # Ventana alta con arco que muestra la noche y estrellas
         self._draw_tall_lighthouse_window(puzle_luces_resuelto)
@@ -206,7 +207,7 @@ class FaroInteriorScene:
             pygame.draw.ellipse(self.screen, (237, 225, 190), (luces_x + 18, luces_y + 18, 44, 44), 4)
 
             # Símbolo grande
-            self._draw_text(names[index], (luces_x + 40, luces_y + 40), self.large_font, PAPER, centered=True)
+            self._draw_text(names[index], (luces_x + 40, luces_y + 40), self.large_font, self.PAPER, centered=True)
 
             # Botón debajo de cada luz (centrado y alineado)
             button_x = luces_x + 25
@@ -226,7 +227,6 @@ class FaroInteriorScene:
 
     def _draw_interior_exit(self):
         """Dibuja una trampilla de salida visible en el suelo."""
-        GOLD = (230, 184, 104)
         exit_x = 350
         exit_y = 420
         exit_width = 260
@@ -247,11 +247,10 @@ class FaroInteriorScene:
 
         # Texto "BAJAR" más grande
         self._draw_text("BAJAR", (exit_x + exit_width // 2, exit_y + exit_height + 20),
-                       self.font, GOLD, centered=True)
+                       self.font, self.GOLD, centered=True)
 
     def _draw_lighthouse_switch_on_table(self, progreso_luces, table_x, table_y, table_width):
         """Dibuja el interruptor en la parte inferior de la mesa."""
-        GOLD = (230, 184, 104)
         # Interruptor centrado debajo de las luces (más grande)
         switch_x = table_x + table_width // 2 - 100
         switch_y = table_y + 170
@@ -307,8 +306,7 @@ class FaroInteriorScene:
 
     def _draw_label(self, text, position):
         """Dibuja una etiqueta."""
-        PAPER = (241, 220, 169)
-        self._draw_text(text, position, self.small_font, PAPER)
+        self._draw_text(text, position, self.small_font, self.PAPER)
 
     def _draw_text(self, text, position, font, color, centered=False, right=False):
         """Dibuja texto."""

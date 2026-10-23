@@ -13,12 +13,12 @@ _ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # carpeta 2
 
 def sfx_path(name, extension="wav"):
     """Ruta al efecto de sonido `name`, con la extensión indicada."""
-    return os.path.join(_ROOT, "assets", "sonidos", f"{name}.{extension}")
+    return os.path.join(_ROOT, "assets", "sounds", f"{name}.{extension}")
 
 
-def music_path(name):
-    """Ruta a la música `name` (sin extensión)."""
-    return os.path.join(_ROOT, "assets", "musica", f"{name}.wav")
+def music_path(name, extension="wav"):
+    """Ruta a la música `name` con la extensión indicada."""
+    return os.path.join(_ROOT, "assets", "music", f"{name}.{extension}")
 
 
 def shared_dir():

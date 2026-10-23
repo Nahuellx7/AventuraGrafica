@@ -14,15 +14,14 @@ class AudioManager:
 
     def __init__(self, num_channels=16):
         self.sounds = {}
+        self.active_channels = {}  # Nombre del sonido -> canal activo
         self.music_path = None
         self.enabled = True
         try:
             pygame.mixer.pre_init(44100, -16, 2, 512)
             pygame.mixer.init()
             pygame.mixer.set_num_channels(num_channels)
-            print("AudioManager inicializado correctamente.")
         except pygame.error as e:
-            print(f"Error al inicializar AudioManager: {e}. El audio estará desactivado.")
             self.enabled = False
             self.sounds = None
 
@@ -34,15 +33,27 @@ class AudioManager:
         try:
             self.sounds[name] = pygame.mixer.Sound(path)
         except pygame.error as e:
-            print(f"Error al cargar el sonido '{name}' desde '{path}': {e}")
+            pass
 
     def play_sound(self, name, loops=0):
         """Reproduce un efecto de sonido en el primer canal libre."""
         if not self.enabled or name not in self.sounds:
-            return
+            return None
         channel = pygame.mixer.find_channel()
         if channel:
             channel.play(self.sounds[name], loops)
+            self.active_channels[name] = channel
+            return channel
+        return None
+
+    def stop_sound(self, name):
+        """Detiene un efecto de sonido específico."""
+        if not self.enabled or name not in self.active_channels:
+            return
+        channel = self.active_channels[name]
+        if channel:
+            channel.stop()
+            del self.active_channels[name]
 
     # -------------------------------- Música ------------------------------ #
     def load_music(self, path):
@@ -60,7 +71,7 @@ class AudioManager:
             pygame.mixer.music.set_volume(volume)
             pygame.mixer.music.play(loops)
         except pygame.error as e:
-            print(f"Error al reproducir la música desde '{self.music_path}': {e}")
+            pass
 
     def stop_music(self):
         if not self.enabled:

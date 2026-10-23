@@ -10,6 +10,7 @@ from engine.dialogue_manager import DialogueManager
 from engine.inventory import Inventory, Item
 from engine.hotspot import Hotspot
 from engine.shared_assets import sfx_path
+from engine.audio import AudioManager
 
 # Importar escenas individuales
 from .isla import IslaScene
@@ -56,14 +57,25 @@ class GameScene(Scene):
         self.large_font = pygame.font.Font(None, 34)
         self.dialogue = DialogueManager(self.game.screen, font_size=24, color=(255, 255, 255))
         self.inventory = Inventory(capacity=5)
+        self.audio = AudioManager(num_channels=16)
 
         # Cargar cursor personalizado con transparencia (convert_alpha)
         try:
-            cursor_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "assets", "sprites", "pointer_b.png")
+            cursor_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "assets", "sprites", "pointer_b.png")
             self.cursor_image = pygame.image.load(cursor_path).convert_alpha()
         except Exception as e:
-            print(f"Error cargando cursor: {e}")
             self.cursor_image = None
+
+        # Cargar icono de corazón para HUD de vidas
+        try:
+            heart_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "assets", "sprites", "corazon.png")
+            self.heart_image = pygame.image.load(heart_path).convert_alpha()
+            # Escalar el corazón a un tamaño proporcional (24x24)
+            self.heart_image = pygame.transform.scale(self.heart_image, (24, 24))
+            # Asegurar transparencia después de escalar
+            self.heart_image = self.heart_image.convert_alpha()
+        except Exception as e:
+            self.heart_image = None
 
         # Estado del juego
         self.scene = "isla"
@@ -71,12 +83,9 @@ class GameScene(Scene):
         self.state = GameState.IDLE
         self.player = pygame.Vector2(480, 420)
         self.target = self.player.copy()
-        self.sonido_pasos = None
         self.canal_pasos = None
-        try:
-            self.sonido_pasos = pygame.mixer.Sound(sfx_path("pasos", "mp3"))
-        except (pygame.error, OSError) as e:
-            print(f"Error al cargar el sonido de pasos: {e}")
+        # Cargar sonido de pasos usando AudioManager
+        self.audio.load_sound("pasos", sfx_path("pasos", "mp3"))
         self.pending_hotspot = None
         self.pending_item = None
         self.dialogue_choices = []
@@ -118,13 +127,13 @@ class GameScene(Scene):
 
     def _actualizar_audio_pasos(self, caminando):
         """Reproduce pasos solo mientras el jugador se está desplazando."""
-        if self.sonido_pasos is None:
+        if not self.audio.enabled:
             return
 
         if caminando and self.canal_pasos is None:
-            self.canal_pasos = self.sonido_pasos.play(loops=-1)
+            self.canal_pasos = self.audio.play_sound("pasos", loops=-1)
         elif not caminando and self.canal_pasos is not None:
-            self.canal_pasos.stop()
+            self.audio.stop_sound("pasos")
             self.canal_pasos = None
 
     def _configurar_mundo(self):
@@ -173,6 +182,14 @@ class GameScene(Scene):
         self.message = text
         self.message_timer = pygame.time.get_ticks() + int(duration * 1000)
         self.dialogue.show_message(text, duration_seconds=duration, position="top")
+
+    def _trigger_game_over(self):
+        """Dispara la escena de Game Over (sistema de una sola vida)."""
+        self.dialogue.clear_message()
+        # Limpiar la referencia al game_scene para que el menú no muestre opciones de reanudar
+        self.game.game_scene = None
+        # Cambiar a la escena de game over
+        self.game.change_scene("game_over")
 
     def _punto_en_poligono(self, point, polygon):
         """Verifica si un punto está dentro de un polígono."""
@@ -230,7 +247,7 @@ class GameScene(Scene):
         self.state = GameState.INTERACTING
         if hotspot is not None:
             # Solo las luces y botones del faro se activan directamente (puzle)
-            if hotspot.name in PuzzleManager.DIRECT_EXIT_HOTSPOTS:
+            if hotspot.name in PuzzleManager.HOTSPOTS_LUCES_FARO:
                 self._activar_hotspot(hotspot.name)
             else:
                 # Para todos los demás hotspots, usar el sistema normal de interacción con verbo
@@ -325,6 +342,7 @@ class GameScene(Scene):
                 self.faro_desbloqueado = True
                 self.inventory.remove("Llave maestra")
                 self._say("La puerta cede con un chirrido y deja entrar al faro.")
+                self._activar_hotspot(name)
                 return
         # Compuerta del bunker: requiere tarjeta de acceso
         if name == "Compuerta del bunker":
@@ -397,21 +415,37 @@ class GameScene(Scene):
             self._say("Bruno: «Mi nota dice: Sol, Luna, Estrella, pero el mecanismo tiene sus secretos»", duration=0)
         elif choice == "ayuda":
             if not self.inventory.has("Llave vieja"):
-                self._say("Bruno: «¡Toma! Esta llave vieja podría ser útil. ¡Llévatela!»", duration=0)
-                self.llave_disponible = True
-                self._actualizar_hotspots_refugio()
+                if not self.llave_disponible:
+                    # Primera vez: ofrece la llave
+                    self._say("Bruno: «¡Toma! Esta llave vieja podría ser útil. ¡Llévatela!»", duration=0)
+                    self.llave_disponible = True
+                    self._actualizar_hotspots_refugio()
+                else:
+                    # Llave disponible pero no tomada: le recuerda dónde está
+                    self._say("Bruno: «La llave vieja está ahí sobre la mesa. ¡No la olvides!»", duration=0)
             else:
-                self._say("Bruno: «El faro depende de ti, marinero».", duration=0)
+                # Ya tiene la llave: texto alternativo
+                self._say("Bruno: «Ya tienes la llave vieja. Úsala bien, marinero».", duration=0)
         elif choice == "trabajo":
             self._say("Herrero: «Tranquilo, trabajo en la mesada. Siempre hay algo que arreglar».", duration=0)
         elif choice == "armar_llave":
-            if self.inventory.has("Barra de hierro") and self.inventory.has("Llave vieja"):
+            if self.inventory.has("Llave maestra"):
+                # Ya tiene la llave maestra: texto alternativo
+                self._say("Herrero: «Ya tienes la llave maestra. ¡Ve a abrir ese faro!»", duration=0)
+            elif self.inventory.has("Barra de hierro") and self.inventory.has("Llave vieja"):
+                # Tiene ambos materiales: crea la llave maestra
                 self.inventory.remove("Barra de hierro")
                 self.inventory.remove("Llave vieja")
                 self.inventory.add(Item("Llave maestra", description="Una llave maestra forjada por el herrero."))
                 self._say("Herrero: «Doblo la barra de hierro y la uno con la llave vieja. Aquí tienes tu llave maestra».", duration=0)
             else:
-                self._say("Herrero: «Así como está no puedo armar nada. Traeme la barra de hierro y la llave vieja».", duration=0)
+                # No tiene los materiales: le dice qué falta
+                if not self.inventory.has("Barra de hierro") and not self.inventory.has("Llave vieja"):
+                    self._say("Herrero: «Necesito la barra de hierro y la llave vieja para armar algo».", duration=0)
+                elif not self.inventory.has("Barra de hierro"):
+                    self._say("Herrero: «Tengo la llave vieja, pero me falta la barra de hierro».", duration=0)
+                elif not self.inventory.has("Llave vieja"):
+                    self._say("Herrero: «Tengo la barra de hierro, pero me falta la llave vieja».", duration=0)
         elif choice == "volver":
             if self.current_npc == "bruno":
                 self._abrir_dialogo_bruno()
@@ -475,18 +509,22 @@ class GameScene(Scene):
             pass
         # Puzles y mecanismos interactivos
         elif self.scene == "faro_interior" and name.startswith("Luz de"):
-            self.progreso_luces = PuzzleManager.activar_lente(name, self.progreso_luces, self._say)
-            if self.progreso_luces == len(PuzzleManager.ORDEN_LUCES):
-                self.puzle_luces_resuelto = True
+            nuevo_progreso = PuzzleManager.activar_luz(name, self.progreso_luces, self._say, self._trigger_game_over)
+            if nuevo_progreso is not None:
+                self.progreso_luces = nuevo_progreso
+                if self.progreso_luces == len(PuzzleManager.ORDEN_LUCES):
+                    self.puzle_luces_resuelto = True
         elif self.scene == "faro_interior" and name.startswith("Botón de"):
             luces_mapping = {
                 "Botón de la luna": "Luz de la luna",
                 "Botón de la estrella": "Luz de la estrella",
                 "Botón del sol": "Luz del sol",
             }
-            self.progreso_luces = PuzzleManager.activar_lente(luces_mapping[name], self.progreso_luces, self._say)
-            if self.progreso_luces == len(PuzzleManager.ORDEN_LUCES):
-                self.puzle_luces_resuelto = True
+            nuevo_progreso = PuzzleManager.activar_luz(luces_mapping[name], self.progreso_luces, self._say, self._trigger_game_over)
+            if nuevo_progreso is not None:
+                self.progreso_luces = nuevo_progreso
+                if self.progreso_luces == len(PuzzleManager.ORDEN_LUCES):
+                    self.puzle_luces_resuelto = True
         elif self.scene == "faro_interior" and name == "Interruptor de encendido":
             if self.progreso_luces == len(PuzzleManager.ORDEN_LUCES):
                 self._say("El interruptor activa el faro. Hay una herramienta en la esquina.")
@@ -700,14 +738,13 @@ class GameScene(Scene):
         rect = pygame.Rect(btn_x, btn_y, button_size, button_size)
         if rect.collidepoint(position):
             if len(self.entrada_teclado) == 4:
-                if PuzzleManager.verificar_codigo_bunker(self.entrada_teclado):
+                # Verificar código con callback de Game Over
+                if PuzzleManager.verificar_codigo_bunker(self.entrada_teclado, self._trigger_game_over):
                     self.caja_fuerte_abierta = True
                     self.state = GameState.IDLE
                     self.dialogue.clear_message()
                     self._say("¡Código correcto!. Ahora puedes usar la palanca secreta.")
-                else:
-                    self._say("Código incorrecto. Intenta de nuevo.", duration=2)
-                    self.entrada_teclado = ""
+                # Nota: si el código es incorrecto, el callback ya disparó Game Over
             else:
                 self._say("Ingresa 4 dígitos.", duration=1)
             return
@@ -773,6 +810,9 @@ class GameScene(Scene):
             self._dibujar_opciones_dialogo(self.dialogue_choices)
         elif self.state == GameState.KEYPAD:
             self._dibujar_teclado(self.entrada_teclado)
+
+        # Dibujar HUD de vidas (corazón)
+        self._dibujar_hud_vidas()
 
         self._dibujar_cursor()
 
@@ -1110,3 +1150,23 @@ class GameScene(Scene):
             x, y = mouse_pos
             pygame.draw.polygon(self.game.screen, (255, 255, 255), [(x, y), (x, y+15), (x+10, y+10)])
             pygame.draw.polygon(self.game.screen, (0, 0, 0), [(x, y), (x, y+15), (x+10, y+10)], 1)
+
+    def _dibujar_hud_vidas(self):
+        """Dibuja el HUD de vidas en la esquina superior derecha."""
+        if self.heart_image is not None:
+            margin = 24
+
+            lives_text = self.small_font.render("VIDAS:", True, (255, 255, 255))
+            text_width = lives_text.get_width()
+            heart_width = 24
+            separation = 8
+
+            total_width = text_width + separation + heart_width
+            x = SCREEN_WIDTH - total_width - margin
+            y = 12
+
+            self.game.screen.blit(lives_text, (x, y))
+
+            heart_x = x + text_width + separation
+            heart_y = y - 6
+            self.game.screen.blit(self.heart_image, (heart_x, heart_y))

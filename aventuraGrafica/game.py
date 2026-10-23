@@ -4,6 +4,7 @@ import os
 import pygame
 
 from engine.game_loop import Game
+from engine.audio import AudioManager
 from aventuraGrafica.scenes.menu_scene import MenuScene
 from aventuraGrafica.scenes.game_scene import GameScene
 from aventuraGrafica.scenes.victory_scene import VictoryScene
@@ -23,6 +24,9 @@ class AventuraGrafica(Game):
         super().__init__(SCREEN_WIDTH, SCREEN_HEIGHT, "La Isla Olvidada - Aventura Gráfica", FPS)
 
         self.game_dir = os.path.dirname(os.path.abspath(__file__))
+
+        # Inicializar AudioManager
+        self.audio = AudioManager(num_channels=16)
 
         # Desactivar cursor nativo del sistema (todas las escenas usan cursor personalizado)
         pygame.mouse.set_visible(False)
