@@ -34,14 +34,14 @@ class VentanaFaroScene:
         """Dibuja la vista ampliada de la ventana del faro con el patrón de estrellas."""
         GOLD = (230, 184, 104)
         PAPER = (241, 220, 169)
-        WORLD_HEIGHT = 490
-        SCREEN_WIDTH = 960
+        ALTURA_JUEGO = 490
+        ANCHO_VENTANA = 960
 
         # Fondo de cielo nocturno ampliado
-        for y in range(0, WORLD_HEIGHT, 25):
+        for y in range(0, ALTURA_JUEGO, 25):
             shade = min(20, y // 25)
             color = (12 + shade, 15 + shade, 35 + shade)
-            pygame.draw.rect(self.screen, color, (0, y, SCREEN_WIDTH, 25))
+            pygame.draw.rect(self.screen, color, (0, y, ANCHO_VENTANA, 25))
 
         # Ventana arqueada grande que enmarca el cielo
         window_x = 100
