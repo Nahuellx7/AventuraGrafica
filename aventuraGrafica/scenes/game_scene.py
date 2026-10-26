@@ -28,6 +28,9 @@ ANCHO_VENTANA = 960
 ALTO_VENTANA = 640
 ALTURA_JUEGO = 490
 INICIO_UI = ALTURA_JUEGO
+TAMANO_FRAME_JUGADOR = 128
+TAMANO_JUGADOR = 220
+DURACION_FRAME_CAMINAR = 100
 
 # Colores del juego 
 AZUL_OSCURO = (20, 19, 35) # Fondo de pantalla
@@ -77,10 +80,18 @@ class GameScene(Scene):
         except Exception as e:
             self.heart_image = None
 
+        self.player_frames = {
+            "idle": self._cargar_frames_jugador("Idle.png"),
+            "walk": self._cargar_frames_jugador("Walk.png"),
+            "walk_left": self._cargar_frames_jugador("Walk-left.png"),
+            "interact": self._cargar_frames_jugador("interact.png"),
+        }
+
         # Estado del juego
         self.scene = "isla"
         self.verb = "MIRAR"
         self.state = EstadoJuego.INACTIVO
+        self.interact_until = 0
         self.player = pygame.Vector2(480, 420)
         self.target = self.player.copy()
         self.canal_pasos = None
@@ -130,6 +141,38 @@ class GameScene(Scene):
     def on_exit(self):
         """Limpieza al salir de la escena."""
         self._actualizar_audio_pasos(False)
+
+    def _cargar_frames_jugador(self, filename):
+        """Carga los frames horizontales de una spritesheet del jugador."""
+        asset_dir = os.path.join(
+            os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
+            "assets",
+            "sprites",
+        )
+        path = os.path.join(asset_dir, filename)
+
+        try:
+            sheet = pygame.image.load(path).convert_alpha()
+            if sheet.get_height() != TAMANO_FRAME_JUGADOR:
+                raise ValueError(f"alto inesperado en {filename}: {sheet.get_height()}")
+            if sheet.get_width() % TAMANO_FRAME_JUGADOR:
+                raise ValueError(f"ancho no divisible por el frame en {filename}")
+
+            frames = []
+            for x in range(0, sheet.get_width(), TAMANO_FRAME_JUGADOR):
+                frame = sheet.subsurface(
+                    (x, 0, TAMANO_FRAME_JUGADOR, TAMANO_FRAME_JUGADOR)
+                ).copy()
+                frames.append(
+                    pygame.transform.scale(frame, (TAMANO_JUGADOR, TAMANO_JUGADOR))
+                )
+            return frames
+        except (pygame.error, OSError, ValueError) as error:
+            print(f"No se pudieron cargar los frames de {filename}: {error}")
+            return []
+
+    def _mostrar_interaccion(self):
+        self.interact_until = pygame.time.get_ticks() + 650
 
     def _actualizar_audio_pasos(self, caminando):
         """Reproduce pasos solo mientras el jugador se está desplazando."""
@@ -254,6 +297,7 @@ class GameScene(Scene):
         if hotspot is not None:
             # Solo las luces y botones del faro se activan directamente (puzle)
             if hotspot.name in PuzzleManager.HOTSPOTS_LUCES_FARO:
+                self._mostrar_interaccion()
                 self._activar_hotspot(hotspot.name)
             else:
                 # Para todos los demás hotspots, usar el sistema normal de interacción con verbo
@@ -388,6 +432,7 @@ class GameScene(Scene):
 
     def _combine_items(self, first, second):
         """Combinación de items."""
+        self._mostrar_interaccion()
         self._say("No puedes combinar objetos manualmente. Tienes que llevárselo al herrero.")
 
     def _abrir_dialogo_bruno(self):
@@ -558,6 +603,8 @@ class GameScene(Scene):
 
     def _interact(self, name, verb, item):
         """Interacción genérica con un hotspot."""
+        if verb in ("COGER", "USAR", "HABLAR"):
+            self._mostrar_interaccion()
         if verb == "MIRAR":
             self._look(name)
         elif verb == "COGER":
@@ -831,22 +878,49 @@ class GameScene(Scene):
     # ============ MÉTODOS DE DIBUJO COMUNES ============
 
     def _dibujar_jugador(self, player_pos):
-        """Dibuja el personaje del jugador."""
+        """Dibuja el frame que corresponde al estado actual del jugador."""
         x, y = int(player_pos.x), int(player_pos.y)
-        pygame.draw.ellipse(self.game.screen, (23, 21, 35), (x - 23, y - 7, 46, 12))
-        pygame.draw.rect(self.game.screen, (53, 43, 42), (x - 14, y - 52, 12, 29))
-        pygame.draw.rect(self.game.screen, (53, 43, 42), (x + 2, y - 52, 12, 29))
-        pygame.draw.rect(self.game.screen, (120, 73, 48), (x - 16, y - 28, 15, 26))
-        pygame.draw.rect(self.game.screen, (120, 73, 48), (x + 1, y - 28, 15, 26))
-        pygame.draw.rect(self.game.screen, (47, 94, 108), (x - 21, y - 91, 42, 65))
-        pygame.draw.rect(self.game.screen, (228, 215, 174), (x - 20, y - 76, 40, 8))
-        pygame.draw.rect(self.game.screen, (228, 215, 174), (x - 19, y - 53, 38, 7))
-        pygame.draw.rect(self.game.screen, (207, 151, 109), (x - 15, y - 119, 31, 31))
-        pygame.draw.rect(self.game.screen, (66, 43, 36), (x - 18, y - 125, 36, 12))
-        pygame.draw.rect(self.game.screen, (235, 191, 117), (x - 22, y - 124, 44, 6))
-        pygame.draw.rect(self.game.screen, (38, 35, 39), (x - 7, y - 108, 4, 4))
-        pygame.draw.rect(self.game.screen, (38, 35, 39), (x + 3, y - 108, 4, 4))
-        pygame.draw.rect(self.game.screen, (125, 72, 58), (x - 10, y - 94, 18, 4))
+        screen = self.game.screen
+        pygame.draw.ellipse(screen, (23, 21, 35), (x - 23, y - 7, 46, 12))
+
+        now = pygame.time.get_ticks()
+        if self.state == EstadoJuego.CAMINANDO:
+            walk_direction = "walk_left" if self.target.x < self.player.x else "walk"
+            frames = self.player_frames[walk_direction] or self.player_frames["walk"]
+            if frames:
+                frame_index = (now // DURACION_FRAME_CAMINAR) % len(frames)
+                if walk_direction == "walk_left":
+                    frame_index = len(frames) - 1 - frame_index
+                image = frames[frame_index]
+            else:
+                image = None
+        elif (
+            self.state in (EstadoJuego.DIALOGO, EstadoJuego.TECLADO, EstadoJuego.INTERACTUANDO)
+            or now < self.interact_until
+        ):
+            frames = self.player_frames["interact"]
+            image = frames[0] if frames else None
+        else:
+            frames = self.player_frames["idle"]
+            image = frames[0] if frames else None
+
+        if image is not None:
+            screen.blit(image, image.get_rect(midbottom=(x, y)))
+            return
+
+        pygame.draw.rect(screen, (53, 43, 42), (x - 14, y - 52, 12, 29))
+        pygame.draw.rect(screen, (53, 43, 42), (x + 2, y - 52, 12, 29))
+        pygame.draw.rect(screen, (120, 73, 48), (x - 16, y - 28, 15, 26))
+        pygame.draw.rect(screen, (120, 73, 48), (x + 1, y - 28, 15, 26))
+        pygame.draw.rect(screen, (47, 94, 108), (x - 21, y - 91, 42, 65))
+        pygame.draw.rect(screen, (228, 215, 174), (x - 20, y - 76, 40, 8))
+        pygame.draw.rect(screen, (228, 215, 174), (x - 19, y - 53, 38, 7))
+        pygame.draw.rect(screen, (207, 151, 109), (x - 15, y - 119, 31, 31))
+        pygame.draw.rect(screen, (66, 43, 36), (x - 18, y - 125, 36, 12))
+        pygame.draw.rect(screen, (235, 191, 117), (x - 22, y - 124, 44, 6))
+        pygame.draw.rect(screen, (38, 35, 39), (x - 7, y - 108, 4, 4))
+        pygame.draw.rect(screen, (38, 35, 39), (x + 3, y - 108, 4, 4))
+        pygame.draw.rect(screen, (125, 72, 58), (x - 10, y - 94, 18, 4))
 
     def _dibujar_mensaje(self, message, message_timer, state, dialogue):
         """Dibuja mensajes temporales en pantalla con word wrapping dinámico."""
