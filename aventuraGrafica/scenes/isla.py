@@ -1,6 +1,7 @@
 """Escena de la isla."""
 
 import math
+import os
 import pygame
 from engine.hotspot import Hotspot
 
@@ -26,6 +27,9 @@ class IslaScene:
     def __init__(self, screen):
         """Inicializa la escena de la isla."""
         self.screen = screen
+        project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        background_path = os.path.join(project_root, "assets", "sprites", "cielo_aldea.png")
+        self.background = pygame.image.load(background_path).convert()
 
     def get_hotspots(self):
         """Retorna la lista de hotspots de la isla."""
@@ -37,13 +41,10 @@ class IslaScene:
 
     def draw(self, inventory, barra_tomada=False, bunker_desbloqueado=False):
         """Dibuja la escena de la isla."""
-        self._draw_night_sky((12, 21, 59))
-        self._draw_far_town()
-        # Fondo de ladrillos grises continuo hasta el suelo (sin manchas amarillas)
-        pygame.draw.rect(self.screen, (44, 45, 71), (0, 250, 960, 240))
+        self.screen.blit(self.background, (0, 0))
         # Piso con línea superior horizontal perfecta (Y constante de extremo a extremo)
         pygame.draw.rect(self.screen, (60, 57, 81), (0, 365, 960, 125))
-        self._draw_cobblestones(0, 375)
+        self._draw_cobblestones(375, 490)
         self._draw_building(35, 95, 245, 294, (106, 58, 49), "REFUGIO", True)
         self._draw_building(680, 95, 245, 300, (57, 64, 93), "HERRERIA", False)
         self._draw_bunker_gate(bunker_desbloqueado)
@@ -54,31 +55,6 @@ class IslaScene:
         self._draw_label("ISLA", (24, 18))
 
     # ============ MÉTODOS AUXILIARES DE DIBUJO ============
-
-    def _draw_night_sky(self, base):
-        """Dibuja el cielo nocturno."""
-        ALTURA_JUEGO = 490
-        ANCHO_VENTANA = 960
-        for y in range(0, ALTURA_JUEGO, 28):
-            shade = min(28, y // 18)
-            color = (base[0] + shade, base[1] + shade, min(100, base[2] + shade))
-            pygame.draw.rect(self.screen, color, (0, y, ANCHO_VENTANA, 28))
-        for index in range(66):
-            x = (index * 157 + 43) % ANCHO_VENTANA
-            y = (index * 71 + 17) % 245
-            size = 2 if index % 5 else 3
-            pygame.draw.rect(self.screen, (225, 220, 187), (x, y, size, size))
-        pygame.draw.circle(self.screen, (243, 218, 151), (816, 69), 27)
-        pygame.draw.circle(self.screen, (17, 25, 63), (828, 57), 23)
-
-    def _draw_far_town(self):
-        """Dibuja la ciudad lejana."""
-        for x, width, height in ((0, 108, 155), (287, 90, 180), (382, 115, 142),
-                                 (508, 92, 194), (604, 84, 144), (925, 110, 176)):
-            y = 295 - height
-            pygame.draw.rect(self.screen, (31, 39, 68), (x, y, width, height))
-            pygame.draw.polygon(self.screen, (39, 45, 76), [(x - 8, y + 15),
-                                 (x + width // 2, y - 18), (x + width + 8, y + 15)])
 
     def _draw_building(self, x, y, width, height, color, sign, tavern):
         """Dibuja un edificio."""

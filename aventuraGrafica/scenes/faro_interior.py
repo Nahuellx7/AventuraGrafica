@@ -1,6 +1,6 @@
 """Escena interior del faro."""
 
-import math
+import os
 import pygame
 from engine.hotspot import Hotspot
 
@@ -11,8 +11,6 @@ class FaroInteriorScene:
     # Constantes
     GOLD = (230, 184, 104)
     PAPER = (241, 220, 169)
-    ANCHO_VENTANA = 960
-    ALTURA_JUEGO = 490
 
     # Hotspots del faro interior
     HOTSPOTS = [
@@ -35,6 +33,9 @@ class FaroInteriorScene:
     def __init__(self, screen):
         """Inicializa la escena interior del faro."""
         self.screen = screen
+        project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        background_path = os.path.join(project_root, "assets", "sprites", "cielo_farol.png")
+        self.background = pygame.image.load(background_path).convert()
         self.font = pygame.font.Font(None, 25)
         self.small_font = pygame.font.Font(None, 20)
         self.large_font = pygame.font.Font(None, 34)
@@ -49,13 +50,8 @@ class FaroInteriorScene:
 
     def draw(self, progreso_luces, inventory, puzle_luces_resuelto=False):
         """Dibuja la escena interior del faro con el panel de luces."""
-        for y in range(0, self.ALTURA_JUEGO, 20):
-            shade = min(15, y // 30)
-            color = (28 + shade, 24 + shade, 35 + shade)
-            pygame.draw.rect(self.screen, color, (0, y, self.ANCHO_VENTANA, 20))
-
-        # Ventana alta con arco que muestra la noche y estrellas
-        self._draw_tall_lighthouse_window(puzle_luces_resuelto)
+        self.screen.blit(self.background, (0, 0))
+        self._draw_hidden_stars(puzle_luces_resuelto)
 
         # Mesa de madera principal
         table_x = 260
@@ -82,27 +78,8 @@ class FaroInteriorScene:
 
     # ============ MÉTODOS AUXILIARES DE DIBUJO ============
 
-    def _draw_tall_lighthouse_window(self, puzle_luces_resuelto=False):
-        """Dibuja una ventana alta con arco en el fondo que muestra la noche y estrellas."""
-        # Marco de la ventana alta centrada en el fondo
-        window_x = 380
-        window_y = 30
-        window_width = 200
-        window_height = 180
-
-        # Borde exterior del marco (mampostería)
-        pygame.draw.rect(self.screen, (68, 55, 50), (window_x - 15, window_y - 15, window_width + 30, window_height + 30), 8)
-
-        # Parte inferior rectangular del marco
-        pygame.draw.rect(self.screen, (89, 75, 52), (window_x, window_y + 60, window_width, window_height - 60), 6)
-
-        # Arco superior del marco
-        pygame.draw.arc(self.screen, (89, 75, 52), (window_x, window_y, window_width, 120), math.pi, 0, 6)
-
-        # Cielo nocturno visible a través de la ventana
-        pygame.draw.rect(self.screen, (12, 18, 42), (window_x + 8, window_y + 68, window_width - 16, window_height - 74))
-        pygame.draw.ellipse(self.screen, (12, 18, 42), (window_x + 8, window_y + 8, window_width - 16, 120))
-
+    def _draw_hidden_stars(self, puzle_luces_resuelto=False):
+        """Dibuja las estrellas que revelan el código al resolver el puzle."""
         if puzle_luces_resuelto:
             # Estrellas con patrón numérico visible
             star_positions = [
@@ -121,10 +98,6 @@ class FaroInteriorScene:
                 # Números junto a cada estrella
                 numbers = ["4", "7", "2", "9"]
                 self._draw_text(numbers[i], (sx + 8, sy - 8), self.small_font, (248, 212, 138))
-
-            # Luna pequeña en el cielo
-            pygame.draw.circle(self.screen, (243, 235, 200), (470, 60), 8)
-            pygame.draw.circle(self.screen, (12, 18, 42), (465, 58), 3)
         else:
             # Estrellas normales sin patrón visible
             star_positions = [
@@ -133,10 +106,6 @@ class FaroInteriorScene:
             ]
             for sx, sy in star_positions:
                 pygame.draw.circle(self.screen, (225, 220, 187), (sx, sy), 2)
-
-            # Luna pequeña en el cielo
-            pygame.draw.circle(self.screen, (243, 235, 200), (470, 60), 8)
-            pygame.draw.circle(self.screen, (12, 18, 42), (465, 58), 3)
 
     def _draw_wooden_table(self, x, y, width, height):
         """Dibuja una mesa de madera centrada."""

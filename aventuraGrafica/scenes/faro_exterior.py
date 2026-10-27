@@ -1,5 +1,6 @@
 """Escena exterior del faro."""
 
+import os
 import math
 import pygame
 from engine.hotspot import Hotspot
@@ -21,6 +22,9 @@ class FaroExteriorScene:
     def __init__(self, screen):
         """Inicializa la escena exterior del faro."""
         self.screen = screen
+        project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        background_path = os.path.join(project_root, "assets", "sprites", "cielo_afueras_farol.png")
+        self.background = pygame.image.load(background_path).convert()
         self.font = pygame.font.Font(None, 25)
         self.small_font = pygame.font.Font(None, 20)
 
@@ -37,7 +41,7 @@ class FaroExteriorScene:
         GOLD = (230, 184, 104)
         PAPER = (241, 220, 169)
 
-        self._draw_night_sky((8, 19, 54))
+        self.screen.blit(self.background, (0, 0))
         pygame.draw.rect(self.screen, (24, 45, 75), (0, 295, 960, 195))
         for i in range(9):
             wave_y = 345 + i * 19
@@ -53,22 +57,6 @@ class FaroExteriorScene:
         self._draw_label("FARO DEL ACANTILADO", (24, 18))
 
     # ============ MÉTODOS AUXILIARES DE DIBUJO ============
-
-    def _draw_night_sky(self, base):
-        """Dibuja el cielo nocturno."""
-        ALTURA_JUEGO = 490
-        ANCHO_VENTANA = 960
-        for y in range(0, ALTURA_JUEGO, 28):
-            shade = min(28, y // 18)
-            color = (base[0] + shade, base[1] + shade, min(100, base[2] + shade))
-            pygame.draw.rect(self.screen, color, (0, y, ANCHO_VENTANA, 28))
-        for index in range(66):
-            x = (index * 157 + 43) % ANCHO_VENTANA
-            y = (index * 71 + 17) % 245
-            size = 2 if index % 5 else 3
-            pygame.draw.rect(self.screen, (225, 220, 187), (x, y, size, size))
-        pygame.draw.circle(self.screen, (243, 218, 151), (816, 69), 27)
-        pygame.draw.circle(self.screen, (17, 25, 63), (828, 57), 23)
 
     def _draw_cliff_stones(self):
         """Dibuja piedras en el acantilado."""
