@@ -32,6 +32,10 @@ El proyecto sigue una arquitectura modular con separación clara de responsabili
 aventuraGrafica/
 ├── scenes/
 │   ├── game_scene.py          # Orquestador principal que coordina todas las escenas
+│   ├── game_scene_config.py   # Estados y constantes compartidos por la escena principal
+│   ├── game_scene_input.py    # Eventos y controles
+│   ├── game_scene_interactions.py # Interacciones, diálogos y transiciones
+│   ├── game_scene_rendering.py # Renderizado común de la escena principal
 │   ├── puzzles.py             # Lógica de acertijos (PuzzleManager)
 │   ├── menu_scene.py          # Menú principal con opciones de juego
 │   ├── victory_scene.py       # Pantalla de victoria
@@ -51,6 +55,7 @@ aventuraGrafica/
 
 - **Composición**: `GameScene` compone múltiples escenas individuales (`IslaScene`, `RefugioScene`, etc.).
 - **Delegación**: `GameScene` delega el renderizado y la obtención de datos (hotspots, polígonos caminables) a las escenas específicas.
+- **Separación de responsabilidades**: la entrada, las interacciones y el renderizado común de `GameScene` se organizan en módulos separados.
 - **Single Responsibility Principle**: Cada clase tiene una responsabilidad única (renderizado de una locación, gestión de puzles, orquestación del juego).
 - **Constantes Estáticas**: Hotspots y polígonos caminables definidos como atributos de clase para reutilización.
 
@@ -61,10 +66,7 @@ Clase principal que coordina todas las escenas del juego. Responsabilidades:
 - Inicialización de componentes del juego (inventario, diálogo, cursor).
 - Gestión del estado del juego (escena actual, posición del jugador, verbos).
 - Coordinación de transiciones entre escenas.
-- Delegación de renderizado a la escena correspondiente.
-- Manejo de eventos del usuario (clics, teclas).
-- Sistema de diálogos con NPCs.
-- Interfaz de usuario (verbos, inventario, cursor).
+- Delegación de entrada, interacciones y renderizado a sus módulos especializados.
 
 #### PuzzleManager
 Clase estática que gestiona la lógica de los acertijos:
