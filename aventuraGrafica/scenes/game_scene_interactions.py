@@ -76,7 +76,19 @@ class GameSceneInteractionMixin:
 
     def _take(self, name):
         """Acción de coger."""
-        if name == "Barra de hierro" and self.scene == "isla":
+        if name == "Barril" and self.scene == "isla":
+            if not self.herrero_menciono_barril:
+                self._say("No sé de quién será ese barril. Mejor no llevármelo.")
+            elif self.barril_entregado:
+                self._say("Ya le devolví el barril al herrero.")
+            elif self.inventory.has("Barril"):
+                self._say("Ya llevo el barril. Tengo que devolvérselo al herrero.")
+            elif self.inventory.add(Item("Barril", description="El barril perdido del herrero.")):
+                self.barril_tomado = True
+                self._say("Recojo el barril perdido del herrero.")
+            else:
+                self._say("No tengo espacio en el inventario para llevar el barril.")
+        elif name == "Barra de hierro" and self.scene == "isla":
             if self.inventory.has("Barra de hierro"):
                 self._say("Ya tengo la barra de hierro.")
             else:
@@ -183,9 +195,12 @@ class GameSceneInteractionMixin:
         self.current_npc = "herrero"
         self.dialogue_choices = [
             ("¿Qué tal va el trabajo en el taller?", "trabajo"),
+            ("¿Por qué la cara larga?", "cara_larga"),
             ("¿Me puedes armar una llave con esto?", "armar_llave"),
-            ("Me voy.", "salir"),
         ]
+        if self.inventory.has("Barril") and not self.barril_entregado:
+            self.dialogue_choices.append(("Entregarle el barril perdido", "entregar_barril"))
+        self.dialogue_choices.append(("Me voy.", "salir"))
         self._say("Herrero: «¿Qué necesitas?»", duration=0)
 
     def _elegir_dialogo(self, choice):
@@ -209,6 +224,21 @@ class GameSceneInteractionMixin:
                 self._say("Bruno: «Ya tienes la llave vieja. Úsala bien, marinero».", duration=3)
         elif choice == "trabajo":
             self._say("Herrero: «Tranquilo, trabajo en la mesada. Siempre hay algo que arreglar».", duration=3)
+        elif choice == "cara_larga":
+            self.herrero_menciono_barril = True
+            self._say("Herrero: «Perdí de vista un barril que tenía que traer al taller. Sin él, no puedo organizar mis cosas».", duration=3)
+        elif choice == "entregar_barril":
+            if self.inventory.has("Barril") and not self.barril_entregado:
+                self.inventory.remove("Barril")
+                if self.inventory.add(Item("Binoculares", description="Unos binoculares que el herrero te regala en agradecimiento.")):
+                    self.barril_entregado = True
+                    self.barril_tomado = True
+                    self._say("Herrero: «¡Ese es mi barril! Muchas gracias por traerlo. Toma estos binoculares, te los regalo».", duration=3)
+                else:
+                    self.inventory.add(Item("Barril", description="El barril perdido del herrero."))
+                    self._say("No tengo espacio para aceptar la recompensa.")
+            else:
+                self._say("Herrero: «Todavía no tienes el barril que perdí».", duration=3)
         elif choice == "armar_llave":
             if self.inventory.has("Llave maestra"):
                 # Ya tiene la llave maestra: texto alternativo
@@ -237,11 +267,11 @@ class GameSceneInteractionMixin:
             self.dialogue.clear_message()
             self.current_npc = None
             return
-        if choice in ("isla", "orden", "ayuda", "trabajo", "armar_llave"):
-            self.dialogue_choices = [
-                ("Volver a preguntar", "volver"),
-                ("Terminar conversación", "salir"),
-            ]
+        if choice in ("isla", "orden", "ayuda", "trabajo", "cara_larga", "armar_llave", "entregar_barril"):
+            self.dialogue_choices = [("Volver a preguntar", "volver")]
+            if self.current_npc == "herrero" and self.inventory.has("Barril") and not self.barril_entregado:
+                self.dialogue_choices.append(("Entregarle el barril perdido", "entregar_barril"))
+            self.dialogue_choices.append(("Terminar conversación", "salir"))
 
     def _activar_hotspot(self, name):
         """Activa un hotspot (cambio de escena, uso de objeto, etc.)."""

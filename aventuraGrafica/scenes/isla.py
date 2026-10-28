@@ -39,7 +39,7 @@ class IslaScene:
         """Retorna el polígono caminable de la isla."""
         return self.WALKABLE
 
-    def draw(self, inventory, barra_tomada=False, bunker_desbloqueado=False):
+    def draw(self, inventory, barra_tomada=False, bunker_desbloqueado=False, barril_tomado=False):
         """Dibuja la escena de la isla."""
         self.screen.blit(self.background, (0, 0))
         # Piso con línea superior horizontal perfecta (Y constante de extremo a extremo)
@@ -48,7 +48,8 @@ class IslaScene:
         self._draw_building(35, 95, 245, 294, (106, 58, 49), "REFUGIO", True)
         self._draw_building(680, 95, 245, 300, (57, 64, 93), "HERRERIA", False)
         self._draw_bunker_gate(bunker_desbloqueado)
-        self._draw_barrel(85, 410, inventory)
+        if not barril_tomado:
+            self._draw_barrel(85, 410, inventory)
         if not barra_tomada:
             self._draw_iron_bar(140, 415, inventory)
         self._draw_lighthouse_path_sign()

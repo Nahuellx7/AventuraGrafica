@@ -25,7 +25,12 @@ class GameSceneRenderingMixin:
 
         # Delegar dibujo a la escena correspondiente
         if self.scene == "isla":
-            self.isla_scene.draw(self.inventory, self.barra_tomada, self.bunker_desbloqueado)
+            self.isla_scene.draw(
+                self.inventory,
+                self.barra_tomada,
+                self.bunker_desbloqueado,
+                self.barril_tomado,
+            )
         elif self.scene == "refugio":
             self.refugio_scene.draw(self.inventory, self.llave_tomada, self.llave_disponible)
         elif self.scene == "herreria":
@@ -346,6 +351,18 @@ class GameSceneRenderingMixin:
             pygame.draw.rect(self.game.screen, (145, 145, 155), (x - 5, y - 22, 10, 44))
             pygame.draw.rect(self.game.screen, (178, 178, 188), (x - 5, y - 22, 10, 44), 2)
             pygame.draw.circle(self.game.screen, (168, 145, 125), (x, y), 4)
+        elif name == "Barril":
+            pygame.draw.ellipse(self.game.screen, (76, 47, 36), (x - 20, y - 18, 40, 36))
+            pygame.draw.rect(self.game.screen, (112, 65, 43), (x - 17, y - 15, 34, 30))
+            pygame.draw.line(self.game.screen, (190, 135, 72), (x - 10, y - 14), (x - 10, y + 14), 3)
+            pygame.draw.line(self.game.screen, (190, 135, 72), (x + 10, y - 14), (x + 10, y + 14), 3)
+            pygame.draw.arc(self.game.screen, (188, 139, 79), (x - 18, y - 12, 36, 20), 0, 3.14, 2)
+        elif name == "Binoculares":
+            pygame.draw.circle(self.game.screen, (83, 91, 82), (x - 11, y), 11)
+            pygame.draw.circle(self.game.screen, (83, 91, 82), (x + 11, y), 11)
+            pygame.draw.circle(self.game.screen, (154, 174, 158), (x - 11, y), 7, 2)
+            pygame.draw.circle(self.game.screen, (154, 174, 158), (x + 11, y), 7, 2)
+            pygame.draw.rect(self.game.screen, (83, 91, 82), (x - 5, y - 4, 10, 8))
         elif name == "Llave vieja":
             offset_x = x - 4
             pygame.draw.circle(self.game.screen, (168, 145, 118), (offset_x - 8, y), 12)

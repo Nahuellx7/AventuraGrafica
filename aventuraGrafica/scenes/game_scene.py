@@ -90,6 +90,9 @@ class GameScene(GameSceneInputMixin, GameSceneInteractionMixin, GameSceneRenderi
         self.progreso_luces = 0
         self.puzle_luces_resuelto = False
         self.barra_tomada = False
+        self.barril_tomado = False
+        self.herrero_menciono_barril = False
+        self.barril_entregado = False
         self.llave_tomada = False
         self.llave_disponible = False
 
