@@ -8,6 +8,7 @@ from .game_scene_config import (
     AZUL_OSCURO,
     DORADO,
     DURACION_FRAME_CAMINAR,
+    DURACION_FRAME_IDLE,
     EstadoJuego,
     INICIO_UI,
     PANEL,
@@ -82,7 +83,11 @@ class GameSceneRenderingMixin:
             image = frames[0] if frames else None
         else:
             frames = self.player_frames["idle"]
-            image = frames[0] if frames else None
+            image = (
+                frames[(now // DURACION_FRAME_IDLE) % len(frames)]
+                if frames
+                else None
+            )
 
         if image is not None:
             screen.blit(image, image.get_rect(midbottom=(x, y)))
