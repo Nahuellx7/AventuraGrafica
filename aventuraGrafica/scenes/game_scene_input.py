@@ -36,6 +36,11 @@ class GameSceneInputMixin:
 
     def _manejar_click(self, position):
         """Maneja clics del mouse."""
+        if self.state in (
+            EstadoJuego.MIRANDO_LUNA,
+            EstadoJuego.VOLVIENDO_BINOCULARES,
+        ):
+            return
         if self.state == EstadoJuego.GANADO:
             self.game.change_scene("victory")
             return

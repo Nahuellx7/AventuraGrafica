@@ -1,5 +1,6 @@
 """GameSceneInteraction for the main game scene."""
 
+import pygame
 from engine.inventory import Item
 from .game_scene_config import EstadoJuego
 from .puzzles import PuzzleManager
@@ -10,7 +11,20 @@ class GameSceneInteractionMixin:
 
     def _iniciar_interaccion(self, hotspot):
         """Inicia una interacción con un hotspot."""
-        if self.state in (EstadoJuego.DIALOGO, EstadoJuego.GANADO):
+        if self.state in (
+            EstadoJuego.DIALOGO,
+            EstadoJuego.GANADO,
+            EstadoJuego.MIRANDO_LUNA,
+            EstadoJuego.VOLVIENDO_BINOCULARES,
+        ):
+            return
+        if self.scene == "luna" and hotspot.name == "Volver":
+            self._cambiar_escena(
+                self.luna_return_scene,
+                starting_position=self.luna_return_position,
+            )
+            self.binoculares_animation_started = pygame.time.get_ticks()
+            self.state = EstadoJuego.VOLVIENDO_BINOCULARES
             return
         self.pending_hotspot = hotspot
         self.pending_item = self.inventory.selected if self.verb == "USAR" else None
@@ -116,6 +130,19 @@ class GameSceneInteractionMixin:
 
     def _use(self, name, item):
         """Acción de usar."""
+        if name == "Luna" and self.scene in ("faro_ventana", "faro_interior"):
+            if item is not None and item.name == "Binoculares":
+                self.luna_return_scene = self.scene
+                self.luna_return_position = self.player.copy()
+                self.binoculares_animation_started = pygame.time.get_ticks()
+                self.state = EstadoJuego.MIRANDO_LUNA
+                self._say("Miro la luna a través de los binoculares.", duration=1.2)
+            elif item is None:
+                self._say("Necesito unos binoculares para observar la luna.")
+            else:
+                self._say("Ese objeto no me ayudará a observar la luna.")
+            return
+
         # Puertas y salidas: si no hay item seleccionado, intentar entrar
         if name in ("Puerta del refugio", "Puerta de la herreria", "Camino al faro",
                     "Salir a la isla", "Volver al puerto", "Bajar", "Volver", "Salir del bunker",

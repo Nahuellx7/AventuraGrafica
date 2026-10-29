@@ -22,6 +22,7 @@ class FaroInteriorScene:
         Hotspot((456, 325, 30, 30), "Botón de la estrella"),
         Hotspot((582, 325, 30, 30), "Botón del sol"),
         Hotspot((380, 370, 200, 70), "Interruptor de encendido"),
+        Hotspot((825, 52, 100, 100), "Luna"),
         Hotspot((80, 30, 200, 180), "Cielo nocturno"),
         Hotspot((750, 370, 60, 40), "Tarjeta de acceso"),
     ]

@@ -9,6 +9,7 @@ class VentanaFaroScene:
 
     # Hotspots de la ventana del faro
     HOTSPOTS = [
+        Hotspot((435, 105, 90, 90), "Luna"),
         Hotspot((350, 420, 260, 60), "Volver"),
     ]
 

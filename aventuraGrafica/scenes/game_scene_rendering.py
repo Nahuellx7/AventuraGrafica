@@ -7,6 +7,7 @@ from .game_scene_config import (
     ANCHO_VENTANA,
     AZUL_OSCURO,
     DORADO,
+    DURACION_FRAME_BINOCULARES,
     DURACION_FRAME_CAMINAR,
     DURACION_FRAME_IDLE,
     EstadoJuego,
@@ -43,9 +44,12 @@ class GameSceneRenderingMixin:
             self.ventana_faro_scene.draw(self.puzle_luces_resuelto)
         elif self.scene == "bunker_interior":
             self.bunker_interior_scene.draw(self.inventory)
+        elif self.scene == "luna":
+            self.luna_scene.draw()
 
         # Dibujar elementos comunes del juego
-        self._dibujar_jugador(self.player)
+        if self.scene != "luna":
+            self._dibujar_jugador(self.player)
         self._dibujar_mensaje(self.message, self.message_timer, self.state.name, self.dialogue)
         self._dibujar_interfaz(("MIRAR", "USAR", "HABLAR", "COGER"), self.verb, self.inventory)
 
@@ -70,7 +74,19 @@ class GameSceneRenderingMixin:
         pygame.draw.ellipse(screen, (23, 21, 35), (x - 23, y - 7, 46, 12))
 
         now = pygame.time.get_ticks()
-        if self.state == EstadoJuego.CAMINANDO:
+        if self.state in (
+            EstadoJuego.MIRANDO_LUNA,
+            EstadoJuego.VOLVIENDO_BINOCULARES,
+        ):
+            frames = self.player_frames["binoculares"]
+            elapsed = now - self.binoculares_animation_started
+            animation_frame = elapsed // DURACION_FRAME_BINOCULARES
+            if self.state == EstadoJuego.VOLVIENDO_BINOCULARES:
+                frame_index = max(len(frames) - 1 - animation_frame, 0)
+            else:
+                frame_index = min(animation_frame, len(frames) - 1)
+            image = frames[frame_index] if frames else None
+        elif self.state == EstadoJuego.CAMINANDO:
             walk_direction = "walk_left" if self.target.x < self.player.x else "walk"
             frames = self.player_frames[walk_direction] or self.player_frames["walk"]
             if frames:

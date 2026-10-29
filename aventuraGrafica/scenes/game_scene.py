@@ -17,7 +17,13 @@ from .faro_exterior import FaroExteriorScene
 from .faro_interior import FaroInteriorScene
 from .ventana_faro import VentanaFaroScene
 from .bunker_interior import BunkerInteriorScene
-from .game_scene_config import EstadoJuego, TAMANO_FRAME_JUGADOR, TAMANO_JUGADOR
+from .luna import LunaScene
+from .game_scene_config import (
+    DURACION_FRAME_BINOCULARES,
+    EstadoJuego,
+    TAMANO_FRAME_JUGADOR,
+    TAMANO_JUGADOR,
+)
 from .game_scene_input import GameSceneInputMixin
 from .game_scene_interactions import GameSceneInteractionMixin
 from .game_scene_rendering import GameSceneRenderingMixin
@@ -58,6 +64,7 @@ class GameScene(GameSceneInputMixin, GameSceneInteractionMixin, GameSceneRenderi
             "walk": self._cargar_frames_jugador("Walk.png"),
             "walk_left": self._cargar_frames_jugador("Walk-left.png"),
             "interact": self._cargar_frames_jugador("interact.png"),
+            "binoculares": self._cargar_frames_jugador("binoculares.png"),
         }
 
         # Estado del juego
@@ -78,6 +85,9 @@ class GameScene(GameSceneInputMixin, GameSceneInteractionMixin, GameSceneRenderi
             self.audio.sounds["cerrar_puerta"].set_volume(0.15)
         self.pending_hotspot = None
         self.pending_item = None
+        self.binoculares_animation_started = 0
+        self.luna_return_scene = "faro_ventana"
+        self.luna_return_position = self.player.copy()
         self.dialogue_choices = []
         self.current_npc = None
         self.message = "La noche cae sobre La Isla Olvidada. El faro lleva años apagado."
@@ -104,6 +114,7 @@ class GameScene(GameSceneInputMixin, GameSceneInteractionMixin, GameSceneRenderi
         self.faro_interior_scene = FaroInteriorScene(self.game.screen)
         self.ventana_faro_scene = VentanaFaroScene(self.game.screen)
         self.bunker_interior_scene = BunkerInteriorScene(self.game.screen)
+        self.luna_scene = LunaScene(self.game.screen)
 
         # Inicializar mundo
         self._configurar_mundo()
@@ -171,6 +182,7 @@ class GameScene(GameSceneInputMixin, GameSceneInteractionMixin, GameSceneRenderi
             "faro_interior": self.faro_interior_scene.get_walkable(),
             "faro_ventana": self.ventana_faro_scene.get_walkable(),
             "bunker_interior": self.bunker_interior_scene.get_walkable(),
+            "luna": self.luna_scene.get_walkable(),
         }
 
         self.hotspots = {
@@ -181,6 +193,7 @@ class GameScene(GameSceneInputMixin, GameSceneInteractionMixin, GameSceneRenderi
             "faro_interior": self.faro_interior_scene.get_hotspots(),
             "faro_ventana": self.ventana_faro_scene.get_hotspots(),
             "bunker_interior": self.bunker_interior_scene.get_hotspots(),
+            "luna": self.luna_scene.get_hotspots(),
         }
 
     def _cambiar_escena(self, scene, starting_position=None):
@@ -257,6 +270,24 @@ class GameScene(GameSceneInputMixin, GameSceneInteractionMixin, GameSceneRenderi
     def update(self):
         """Actualiza la lógica del juego."""
         self.dialogue.update()
+        if self.state == EstadoJuego.MIRANDO_LUNA:
+            animation_duration = (
+                len(self.player_frames["binoculares"]) * DURACION_FRAME_BINOCULARES
+            )
+            if pygame.time.get_ticks() - self.binoculares_animation_started >= animation_duration:
+                self.dialogue.clear_message()
+                self.message = ""
+                self.message_timer = 0
+                self._cambiar_escena("luna", starting_position=(480, 420))
+            return
+        if self.state == EstadoJuego.VOLVIENDO_BINOCULARES:
+            animation_duration = (
+                len(self.player_frames["binoculares"]) * DURACION_FRAME_BINOCULARES
+            )
+            if pygame.time.get_ticks() - self.binoculares_animation_started >= animation_duration:
+                self.state = EstadoJuego.INACTIVO
+            return
+
         if self.state == EstadoJuego.CAMINANDO:
             offset = self.target - self.player
             distance = offset.length()
