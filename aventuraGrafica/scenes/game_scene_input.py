@@ -23,7 +23,7 @@ class GameSceneInputMixin:
                 elif event.key == pygame.K_F1:
                     self.depurar_puntos = not self.depurar_puntos
                 elif event.key in (pygame.K_1, pygame.K_2, pygame.K_3, pygame.K_4):
-                    self.verb = ("MIRAR", "USAR", "HABLAR", "COGER")[event.key - pygame.K_1]
+                    self.verb = ("MIRAR", "USAR", "HABLAR", "AGARRAR")[event.key - pygame.K_1]
                 elif event.key == pygame.K_r and self.state == EstadoJuego.GANADO:
                     # Reiniciar juego
                     self.__init__(self.game)
@@ -71,7 +71,7 @@ class GameSceneInputMixin:
         x, y = position
         button_width, button_height = 98, 40
         verbs_origin = (18, INICIO_UI + 41)
-        for index, verb in enumerate(("MIRAR", "USAR", "HABLAR", "COGER")):
+        for index, verb in enumerate(("MIRAR", "USAR", "HABLAR", "AGARRAR")):
             rect = pygame.Rect(verbs_origin[0] + index * (button_width + 7),
                                verbs_origin[1], button_width, button_height)
             if rect.collidepoint(position):

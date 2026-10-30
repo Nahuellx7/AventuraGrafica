@@ -13,7 +13,7 @@ Aventura Gráfica - Proyecto desarrollado para la materia Diseño y Desarrollo d
 
 ## Mecánicas Principales
 
-- **Sistema Point-and-Click con Verbos**: El jugador selecciona acciones (MIRAR, USAR, HABLAR, COGER) mediante teclas (1-4) o interfaz gráfica.
+- **Sistema Point-and-Click con Verbos**: El jugador selecciona acciones (MIRAR, USAR, HABLAR, AGARRAR) mediante teclas (1-4) o interfaz gráfica.
 - **Inventario de Capacidad Limitada**: Sistema de inventario con 5 slots, selección de objetos y combinación de items mediante NPCs.
 - **7 Locaciones Interconectadas**: Isla principal, refugio, herrería, faro exterior, faro interior, ventana del faro, e interior del búnker.
 - **Diálogos con NPCs**: Sistema de diálogo ramificado con Bruno (antiguo farero) y el herrero (forja de llaves).
@@ -90,7 +90,7 @@ Cada escena es una clase independiente con:
 - **Tecla 1**: Verbo MIRAR
 - **Tecla 2**: Verbo USAR
 - **Tecla 3**: Verbo HABLAR
-- **Tecla 4**: Verbo COGER
+- **Tecla 4**: Verbo AGARRAR
 - **Tecla ESC**: Abrir menú / Salir de diálogo
 - **Tecla F1**: Activar/desactivar modo depuración (visualizar hotspots)
 
@@ -142,4 +142,3 @@ python -m aventuraGrafica.main
 ```
 
 ---
-

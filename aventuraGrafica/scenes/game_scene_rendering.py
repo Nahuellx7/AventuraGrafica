@@ -51,7 +51,7 @@ class GameSceneRenderingMixin:
         if self.scene != "luna":
             self._dibujar_jugador(self.player)
         self._dibujar_mensaje(self.message, self.message_timer, self.state.name, self.dialogue)
-        self._dibujar_interfaz(("MIRAR", "USAR", "HABLAR", "COGER"), self.verb, self.inventory)
+        self._dibujar_interfaz(("MIRAR", "USAR", "HABLAR", "AGARRAR"), self.verb, self.inventory)
 
         if self.depurar_puntos:
             for hotspot in self.hotspots[self.scene]:

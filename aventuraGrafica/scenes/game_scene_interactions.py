@@ -89,7 +89,7 @@ class GameSceneInteractionMixin:
             self._say(descriptions.get(name, "No encuentro nada especial."))
 
     def _take(self, name):
-        """Acción de coger."""
+        """Acción de agarrar."""
         if name == "Barril" and self.scene == "isla":
             if not self.herrero_menciono_barril:
                 self._say("No sé de quién será ese barril. Mejor no llevármelo.")
@@ -390,11 +390,11 @@ class GameSceneInteractionMixin:
 
     def _interact(self, name, verb, item):
         """Interacción genérica con un hotspot."""
-        if verb in ("COGER", "USAR", "HABLAR"):
+        if verb in ("AGARRAR", "USAR", "HABLAR"):
             self._mostrar_interaccion()
         if verb == "MIRAR":
             self._look(name)
-        elif verb == "COGER":
+        elif verb == "AGARRAR":
             self._take(name)
         elif verb == "USAR":
             if name in ("Puerta del refugio", "Puerta de la herreria", "Camino al faro",

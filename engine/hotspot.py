@@ -2,7 +2,7 @@
 engine/hotspot.py
 
 Zonas interactivas para aventuras gráficas: una región de la pantalla que
-reacciona al pasar/click del ratón (abrir una puerta, coger un objeto,
+reacciona al pasar/click del ratón (abrir una puerta, agarrar un objeto,
 hablar con un personaje...).
 """
 
