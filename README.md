@@ -143,4 +143,3 @@ python -m aventuraGrafica.main
 
 ---
 
-El proyecto ha sido desarrollado aplicando principios de diseño de software sólidos y buenas prácticas de programación orientada a objetos, con el objetivo de entregar una experiencia de juego completa y un código modular, mantenible y extensible.
