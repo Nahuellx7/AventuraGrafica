@@ -1,5 +1,6 @@
 """Vista ampliada de la luna para el futuro puzle lunar."""
 
+import os
 import pygame
 from engine.hotspot import Hotspot
 
@@ -15,6 +16,11 @@ class LunaScene:
     def __init__(self, screen):
         self.screen = screen
         self.font = pygame.font.Font(None, 25)
+        project_root = os.path.dirname(
+            os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        )
+        image_path = os.path.join(project_root, "assets", "sprites", "luna.png")
+        self.background = pygame.image.load(image_path).convert()
 
     def get_hotspots(self):
         return self.HOTSPOTS
@@ -23,8 +29,8 @@ class LunaScene:
         return self.WALKABLE
 
     def draw(self):
-        """Dibuja solo el botón de regreso sobre un fondo vacío."""
-        self.screen.fill((8, 12, 31))
+        """Dibuja la imagen lunar y el botón para volver."""
+        self.screen.blit(self.background, (0, 0))
         pygame.draw.rect(self.screen, (62, 52, 58), self.BUTTON_RECT)
         pygame.draw.rect(self.screen, (128, 112, 88), self.BUTTON_RECT, 5)
         label = self.font.render("Volver", True, (230, 184, 104))
