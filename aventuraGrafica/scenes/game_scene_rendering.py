@@ -32,6 +32,8 @@ class GameSceneRenderingMixin:
                 self.bunker_desbloqueado,
                 self.barril_tomado,
             )
+        elif self.scene == "bosque":
+            self.bosque_scene.draw()
         elif self.scene == "refugio":
             self.refugio_scene.draw(self.inventory, self.llave_tomada, self.llave_disponible)
         elif self.scene == "herreria":

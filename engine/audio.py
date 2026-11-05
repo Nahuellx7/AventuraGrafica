@@ -62,7 +62,7 @@ class AudioManager:
             return
         self.music_path = path
 
-    def play_music(self, loops=-1, volume=0.5):
+    def play_music(self, loops=-1, volume=0.25):
         """Reproduce la música de fondo en bucle."""
         if not self.enabled or not self.music_path:
             return

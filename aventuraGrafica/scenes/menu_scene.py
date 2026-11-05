@@ -3,7 +3,7 @@
 import os
 import pygame
 from engine.ui import Scene, Button
-from engine.shared_assets import music_path
+from engine.shared_assets import MUSIC_VOLUME, music_path
 
 
 class MenuScene(Scene):
@@ -88,7 +88,7 @@ class MenuScene(Scene):
         if not self.game_started and hasattr(self.game, 'audio') and self.game.audio.enabled:
             try:
                 self.game.audio.load_music(music_path("menu_principal", "mp3"))
-                self.game.audio.play_music(loops=-1, volume=0.3)
+                self.game.audio.play_music(loops=-1, volume=MUSIC_VOLUME)
             except Exception as e:
                 pass
         # Si hay juego en pausa, detener cualquier música de fondo previa

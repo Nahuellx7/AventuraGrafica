@@ -146,7 +146,7 @@ class GameSceneInteractionMixin:
         # Puertas y salidas: si no hay item seleccionado, intentar entrar
         if name in ("Puerta del refugio", "Puerta de la herreria", "Camino al faro",
                     "Salir a la isla", "Volver al puerto", "Bajar", "Volver", "Salir del bunker",
-                    "Caja fuerte", "Palanca secreta"):
+                    "Camino al bosque", "Volver a la aldea", "Caja fuerte", "Palanca secreta"):
             self._activar_hotspot(name)
             return
         # Puerta del faro: requiere llave maestra
@@ -306,6 +306,10 @@ class GameSceneInteractionMixin:
         if self.scene == "isla" and name == "Puerta del refugio":
             self.audio.play_sound("abrir_puerta")
             self._cambiar_escena("refugio", starting_position=(160, 430))
+        elif self.scene == "isla" and name == "Camino al bosque":
+            self._cambiar_escena("bosque", starting_position=(870, 425))
+        elif self.scene == "bosque" and name == "Volver a la aldea":
+            self._cambiar_escena("isla", starting_position=(50, 425))
         elif self.scene == "isla" and name == "Puerta de la herreria":
             self.audio.play_sound("abrir_puerta")
             self._cambiar_escena("herreria", starting_position=(160, 430))

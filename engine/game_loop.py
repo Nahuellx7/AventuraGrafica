@@ -146,8 +146,10 @@ class Game(GameLoop):
         name, kwargs = self._pending_scene
         self._pending_scene = None
 
-        if self.current_scene is not None and hasattr(self.current_scene, "on_exit"):
-            self.current_scene.on_exit()
+        if self.current_scene is not None:
+            self.fade_out(self.current_scene.draw)
+            if hasattr(self.current_scene, "on_exit"):
+                self.current_scene.on_exit()
 
         # Si es la escena "game" y ya existe una instancia, reutilizarla
         if name == "game" and hasattr(self, 'game_scene') and self.game_scene is not None:
@@ -161,6 +163,17 @@ class Game(GameLoop):
 
         if hasattr(self.current_scene, "on_enter"):
             self.current_scene.on_enter()
+
+    def fade_out(self, draw_scene, frames=12):
+        """Dibuja la escena actual bajo una capa negra creciente."""
+        overlay = pygame.Surface(self.screen.get_size())
+        overlay.fill((0, 0, 0))
+        for frame in range(1, frames + 1):
+            draw_scene(self.screen)
+            overlay.set_alpha(frame * 255 // frames)
+            self.screen.blit(overlay, (0, 0))
+            pygame.display.flip()
+            self.clock.tick(self.fps)
 
     # ------------------------------------------------------------------ #
     #  Delegación en la escena activa

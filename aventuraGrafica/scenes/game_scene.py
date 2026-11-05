@@ -6,7 +6,7 @@ import pygame
 from engine.ui import Scene
 from engine.dialogue_manager import DialogueManager
 from engine.inventory import Inventory
-from engine.shared_assets import sfx_path
+from engine.shared_assets import MUSIC_VOLUME, music_path, sfx_path
 from engine.audio import AudioManager
 
 # Importar escenas individuales
@@ -17,6 +17,7 @@ from .faro_exterior import FaroExteriorScene
 from .faro_interior import FaroInteriorScene
 from .ventana_faro import VentanaFaroScene
 from .bunker_interior import BunkerInteriorScene
+from .bosque import BosqueScene
 from .luna import LunaScene
 from .game_scene_config import (
     DURACION_FRAME_BINOCULARES,
@@ -42,6 +43,7 @@ class GameScene(GameSceneInputMixin, GameSceneInteractionMixin, GameSceneRenderi
         self.dialogue = DialogueManager(self.game.screen, font_size=24, color=(255, 255, 255))
         self.inventory = Inventory(capacity=5)
         self.audio = AudioManager(num_channels=16)
+        self.music_track = None
 
         # Cargar cursor personalizado con transparencia (convert_alpha)
         try:
@@ -114,6 +116,7 @@ class GameScene(GameSceneInputMixin, GameSceneInteractionMixin, GameSceneRenderi
         self.faro_interior_scene = FaroInteriorScene(self.game.screen)
         self.ventana_faro_scene = VentanaFaroScene(self.game.screen)
         self.bunker_interior_scene = BunkerInteriorScene(self.game.screen)
+        self.bosque_scene = BosqueScene(self.game.screen)
         self.luna_scene = LunaScene(self.game.screen)
 
         # Inicializar mundo
@@ -124,6 +127,7 @@ class GameScene(GameSceneInputMixin, GameSceneInteractionMixin, GameSceneRenderi
     def on_enter(self):
         """Inicialización al entrar a la escena."""
         pygame.mouse.set_visible(False)
+        self._actualizar_musica_escena()
 
     def on_exit(self):
         """Limpieza al salir de la escena."""
@@ -176,6 +180,7 @@ class GameScene(GameSceneInputMixin, GameSceneInteractionMixin, GameSceneRenderi
         """Configura las zonas caminables y hotspots delegando a las escenas."""
         self.walkable = {
             "isla": self.isla_scene.get_walkable(),
+            "bosque": self.bosque_scene.get_walkable(),
             "refugio": self.refugio_scene.get_walkable(),
             "herreria": self.herreria_scene.get_walkable(),
             "faro": self.faro_exterior_scene.get_walkable(),
@@ -187,6 +192,7 @@ class GameScene(GameSceneInputMixin, GameSceneInteractionMixin, GameSceneRenderi
 
         self.hotspots = {
             "isla": self.isla_scene.get_hotspots(),
+            "bosque": self.bosque_scene.get_hotspots(),
             "refugio": self.refugio_scene.get_hotspots(self.llave_disponible),
             "herreria": self.herreria_scene.get_hotspots(),
             "faro": self.faro_exterior_scene.get_hotspots(),
@@ -199,7 +205,10 @@ class GameScene(GameSceneInputMixin, GameSceneInteractionMixin, GameSceneRenderi
     def _cambiar_escena(self, scene, starting_position=None):
         """Cambia de escena."""
         self._actualizar_audio_pasos(False)
+        if scene != self.scene:
+            self._fade_out()
         self.scene = scene
+        self._actualizar_musica_escena()
         self.state = EstadoJuego.INACTIVO
         self.pending_hotspot = None
         self.current_npc = None
@@ -210,6 +219,34 @@ class GameScene(GameSceneInputMixin, GameSceneInteractionMixin, GameSceneRenderi
         if scene == "refugio":
             self.llave_disponible = False
             self._actualizar_hotspots_refugio()
+
+    def _fade_out(self):
+        """Oscurece la escena actual antes de cambiar de mapa."""
+        self.game.fade_out(self.draw)
+
+    def _actualizar_musica_escena(self):
+        """Mantiene la misma pista al cambiar entre escenas de una zona."""
+        if not self.audio.enabled:
+            return
+        track_by_scene = {
+            "isla": "aldea",
+            "refugio": "aldea",
+            "herreria": "aldea",
+            "bosque": "bosque",
+            "faro": "playa",
+            "faro_interior": "playa",
+            "faro_ventana": "playa",
+            "luna": "playa",
+        }
+        track = track_by_scene.get(self.scene)
+        if track == self.music_track and (track is None or pygame.mixer.music.get_busy()):
+            return
+        if track is None:
+            self.audio.stop_music()
+        else:
+            self.audio.load_music(music_path(track, "mp3"))
+            self.audio.play_music(loops=-1, volume=MUSIC_VOLUME)
+        self.music_track = track
 
     def _actualizar_hotspots_refugio(self):
         """Actualiza los hotspots del refugio según el estado de la llave."""

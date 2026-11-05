@@ -11,6 +11,7 @@ class IslaScene:
 
     # Hotspots específicos de la isla
     HOTSPOTS = [
+        Hotspot((0, 285, 58, 72), "Camino al bosque"),
         Hotspot((127, 277, 62, 112), "Puerta del refugio"),
         Hotspot((365, 270, 230, 180), "Compuerta del bunker"),
         Hotspot((48, 360, 78, 112), "Barril"),
@@ -53,6 +54,7 @@ class IslaScene:
         if not barra_tomada:
             self._draw_iron_bar(140, 415, inventory)
         self._draw_lighthouse_path_sign()
+        self._draw_forest_path_sign()
         self._draw_label("ISLA", (24, 18))
 
     # ============ MÉTODOS AUXILIARES DE DIBUJO ============
@@ -171,6 +173,16 @@ class IslaScene:
         self._draw_text("FARO", (890, 322), pygame.font.Font(None, 20), PAPER, centered=True)
         pygame.draw.polygon(self.screen, (142, 96, 59), [(890, 375), (875, 390), (905, 390)])
         self._draw_text("➜", (890, 395), pygame.font.Font(None, 20), GOLD, centered=True)
+
+    def _draw_forest_path_sign(self):
+        """Dibuja la entrada al bosque en el borde izquierdo de la aldea."""
+        pygame.draw.line(self.screen, (89, 75, 52), (24, 276), (24, 385), 7)
+        pygame.draw.rect(self.screen, (142, 96, 59), (4, 288, 48, 54))
+        pygame.draw.rect(self.screen, (205, 163, 105), (4, 288, 48, 54), 3)
+        self._draw_text("BOSQUE", (28, 304), pygame.font.Font(None, 16),
+                        (241, 220, 169), centered=True)
+        self._draw_text("←", (28, 330), pygame.font.Font(None, 19),
+                        (230, 184, 104), centered=True)
 
     def _draw_cobblestones(self, start_y, end_y):
         """Dibuja adoquines."""
