@@ -53,7 +53,7 @@ class FaroExteriorScene:
         self._draw_cliff_stones()
         self._draw_lighthouse_tower(progreso_luces)
         self._draw_lighthouse_door(faro_desbloqueado)
-        self._draw_isla_return_sign()
+        self._draw_aldea_return_sign()
         self._draw_label("FARO DEL ACANTILADO", (24, 18))
 
     # ============ MÉTODOS AUXILIARES DE DIBUJO ============
@@ -131,14 +131,14 @@ class FaroExteriorScene:
         pygame.draw.rect(self.screen, (128, 112, 88), (handle_x, handle_y, 8, 18), 2)
         pygame.draw.circle(self.screen, (180, 150, 70), (handle_x + 4, handle_y + 9), 3)
 
-    def _draw_isla_return_sign(self):
-        """Dibuja un cartel indicador del camino a la isla en el borde izquierdo."""
+    def _draw_aldea_return_sign(self):
+        """Dibuja un cartel indicador del camino a la aldea en el borde izquierdo."""
         GOLD = (230, 184, 104)
         PAPER = (241, 220, 169)
         pygame.draw.line(self.screen, (89, 75, 52), (50, 280), (50, 420), 8)
         pygame.draw.rect(self.screen, (142, 96, 59), (40, 300, 60, 75))
         pygame.draw.rect(self.screen, (205, 163, 105), (40, 300, 60, 75), 3)
-        self._draw_text("ISLA", (70, 322), self.small_font, PAPER, centered=True)
+        self._draw_text("ALDEA", (70, 322), self.small_font, PAPER, centered=True)
         pygame.draw.polygon(self.screen, (142, 96, 59), [(70, 375), (55, 390), (85, 390)])
         self._draw_text("←", (70, 395), self.small_font, GOLD, centered=True)
 
