@@ -9,10 +9,9 @@ class BunkerInteriorScene:
 
     # Hotspots del bunker interior
     HOTSPOTS = [
-        Hotspot((320, 410, 320, 80), "Salir del bunker"),
+        Hotspot((350, 420, 260, 60), "Salir del bunker"),
         Hotspot((330, 240, 300, 100), "Caja fuerte"),
-        Hotspot((380, 250, 200, 100), "Cámara secreta"),
-        Hotspot((380, 330, 130, 100), "Palanca secreta"),
+        Hotspot((420, 360, 50, 40), "Palanca secreta"),
     ]
 
     # Polígono caminable del bunker interior

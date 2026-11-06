@@ -72,8 +72,7 @@ class AudioManager:
             pygame.mixer.music.load(self.music_path)
             if volume is not None:
                 self.set_music_volume(volume)
-            else:
-                pygame.mixer.music.set_volume(self.music_volume)
+            pygame.mixer.music.set_volume(self.music_volume * 0.20)
             pygame.mixer.music.play(loops)
         except pygame.error as e:
             pass
@@ -82,7 +81,7 @@ class AudioManager:
         """Actualiza el volumen persistente de la música, entre 0 y 1."""
         self.music_volume = max(0.0, min(1.0, volume))
         if self.enabled:
-            pygame.mixer.music.set_volume(self.music_volume)
+            pygame.mixer.music.set_volume(self.music_volume * 0.20)
 
     def stop_music(self):
         if not self.enabled:

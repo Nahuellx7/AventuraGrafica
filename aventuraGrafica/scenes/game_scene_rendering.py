@@ -25,8 +25,8 @@ class GameSceneRenderingMixin:
         surface.fill(AZUL_OSCURO)
 
         # Delegar dibujo a la escena correspondiente
-        if self.scene == "isla":
-            self.isla_scene.draw(
+        if self.scene == "aldea":
+            self.aldea_scene.draw(
                 self.inventory,
                 self.barra_tomada,
                 self.bunker_desbloqueado,

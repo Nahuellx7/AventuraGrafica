@@ -11,7 +11,7 @@ class FaroExteriorScene:
 
     # Hotspots del faro exterior
     HOTSPOTS = [
-        Hotspot((40, 300, 60, 75), "Volver al puerto"),
+        Hotspot((35, 298, 70, 80), "Volver a la aldea"),
         Hotspot((398, 235, 56, 75), "Puerta del faro"),
     ]
 
@@ -132,15 +132,14 @@ class FaroExteriorScene:
         pygame.draw.circle(self.screen, (180, 150, 70), (handle_x + 4, handle_y + 9), 3)
 
     def _draw_aldea_return_sign(self):
-        """Dibuja un cartel indicador del camino a la aldea en el borde izquierdo."""
+        """Dibuja un cartel indicador del camino a la aldea."""
         GOLD = (230, 184, 104)
         PAPER = (241, 220, 169)
         pygame.draw.line(self.screen, (89, 75, 52), (50, 280), (50, 420), 8)
-        pygame.draw.rect(self.screen, (142, 96, 59), (40, 300, 60, 75))
-        pygame.draw.rect(self.screen, (205, 163, 105), (40, 300, 60, 75), 3)
-        self._draw_text("ALDEA", (70, 322), self.small_font, PAPER, centered=True)
-        pygame.draw.polygon(self.screen, (142, 96, 59), [(70, 375), (55, 390), (85, 390)])
-        self._draw_text("←", (70, 395), self.small_font, GOLD, centered=True)
+        pygame.draw.rect(self.screen, (142, 96, 59), (37, 300, 66, 76))
+        pygame.draw.rect(self.screen, (205, 163, 105), (37, 300, 66, 76), 3)
+        self._draw_text("ALDEA", (70, 323), self.small_font, PAPER, centered=True)
+        pygame.draw.polygon(self.screen, (142, 96, 59), [(70, 376), (55, 391), (85, 391)])
 
     def _draw_label(self, text, position):
         """Dibuja una etiqueta."""

@@ -18,6 +18,10 @@ class GameSceneInputMixin:
                         self.state = EstadoJuego.INACTIVO
                         self.dialogue.clear_message()
                         self.current_npc = None
+                    elif self.state == EstadoJuego.TECLADO:
+                        self.state = EstadoJuego.INACTIVO
+                        self.dialogue.clear_message()
+                        self.entrada_teclado = ""
                     else:
                         self.game.change_scene("menu")
                 elif event.key == pygame.K_F1:
@@ -27,6 +31,10 @@ class GameSceneInputMixin:
                 elif event.key == pygame.K_r and self.state == EstadoJuego.GANADO:
                     # Reiniciar juego
                     self.__init__(self.game)
+                elif self.state == EstadoJuego.TECLADO and event.key in (pygame.K_BACKSPACE, pygame.K_DELETE):
+                    # Borrar último dígito en el keypad
+                    if self.entrada_teclado:
+                        self.entrada_teclado = self.entrada_teclado[:-1]
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 self._manejar_click(event.pos)
             elif event.type == pygame.USEREVENT:

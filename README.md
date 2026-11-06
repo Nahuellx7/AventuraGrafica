@@ -13,9 +13,9 @@ Aventura Gráfica - Proyecto desarrollado para la materia Diseño y Desarrollo d
 
 ## Mecánicas Principales
 
-- **Sistema Point-and-Click con Verbos**: El jugador selecciona acciones (MIRAR, USAR, HABLAR, AGARRAR) mediante teclas (1-4) o interfaz gráfica.
+- **Sistema Point-and-Click**: El jugador selecciona acciones mediante teclas o interfaz gráfica.
 - **Inventario de Capacidad Limitada**: Sistema de inventario con 5 slots, selección de objetos y combinación de items mediante NPCs.
-- **7 Locaciones Interconectadas**: Isla principal, refugio, herrería, faro exterior, faro interior, ventana del faro, e interior del búnker.
+- **9 Locaciones Interconectadas**: Aldea principal, bosque, refugio, herrería, faro exterior, faro interior, ventana del faro, luna, e interior del búnker.
 - **Diálogos con NPCs**: Sistema de diálogo ramificado con Bruno (antiguo farero) y el herrero (forja de llaves).
 - **Puzles Lógicos**:
   - **Puzle del Faro**: Activar tres luces en secuencia correcta para revelar el código del búnker.
@@ -26,34 +26,33 @@ Aventura Gráfica - Proyecto desarrollado para la materia Diseño y Desarrollo d
 
 El proyecto sigue una arquitectura modular con separación clara de responsabilidades. La estructura principal se encuentra en el directorio `aventuraGrafica/scenes/`, organizada de manera plana (sin subcarpetas) para facilitar el mantenimiento y la comprensión del código.
 
-### Estructura de Directorios
+### Estructura de Escenas
 
 ```
-aventuraGrafica/
-├── scenes/
-│   ├── game_scene.py          # Orquestador principal que coordina todas las escenas
-│   ├── game_scene_config.py   # Estados y constantes compartidos por la escena principal
-│   ├── game_scene_input.py    # Eventos y controles
-│   ├── game_scene_interactions.py # Interacciones, diálogos y transiciones
-│   ├── game_scene_rendering.py # Renderizado común de la escena principal
-│   ├── puzzles.py             # Lógica de acertijos (PuzzleManager)
-│   ├── menu_scene.py          # Menú principal con opciones de juego
-│   ├── victory_scene.py       # Pantalla de victoria
-│   ├── game_over_scene.py     # Pantalla de game over
-│   ├── isla.py                # Escena de la isla principal
-│   ├── refugio.py             # Escena del refugio (NPC Bruno)
-│   ├── herreria.py            # Escena de la herrería (NPC Herrero)
-│   ├── faro_exterior.py       # Escena exterior del faro
-│   ├── faro_interior.py       # Escena interior del faro (puzle de luces)
-│   ├── ventana_faro.py        # Escena de la ventana del faro (patrón de estrellas)
-│   └── bunker_interior.py     # Escena interior del búnker (puzle de código)
-├── game.py                    # Punto de entrada del juego
-└── main.py                    # Script de ejecución
+aventuraGrafica/scenes/
+├── game_scene.py          # Orquestador principal que coordina todas las escenas
+├── game_scene_config.py   # Estados y constantes compartidos por la escena principal
+├── game_scene_input.py    # Eventos y controles
+├── game_scene_interactions.py # Interacciones, diálogos y transiciones
+├── game_scene_rendering.py # Renderizado común de la escena principal
+├── puzzles.py             # Lógica de acertijos (PuzzleManager)
+├── menu_scene.py          # Menú principal con opciones de juego
+├── victory_scene.py       # Pantalla de victoria
+├── game_over_scene.py     # Pantalla de game over
+├── aldea.py               # Escena de la aldea principal
+├── bosque.py              # Escena del bosque
+├── refugio.py             # Escena del refugio (NPC Bruno)
+├── herreria.py            # Escena de la herrería (NPC Herrero)
+├── faro_exterior.py       # Escena exterior del faro
+├── faro_interior.py       # Escena interior del faro (puzle de luces)
+├── ventana_faro.py        # Escena de la ventana del faro (patrón de estrellas)
+├── luna.py                # Escena de la luna
+└── bunker_interior.py     # Escena interior del búnker (puzle de código)
 ```
 
 ### Patrones de Diseño
 
-- **Composición**: `GameScene` compone múltiples escenas individuales (`IslaScene`, `RefugioScene`, etc.).
+- **Composición**: `GameScene` compone múltiples escenas individuales (`AldeaScene`, `RefugioScene`, etc.).
 - **Delegación**: `GameScene` delega el renderizado y la obtención de datos (hotspots, polígonos caminables) a las escenas específicas.
 - **Separación de responsabilidades**: la entrada, las interacciones y el renderizado común de `GameScene` se organizan en módulos separados.
 - **Single Responsibility Principle**: Cada clase tiene una responsabilidad única (renderizado de una locación, gestión de puzles, orquestación del juego).
@@ -67,22 +66,6 @@ Clase principal que coordina todas las escenas del juego. Responsabilidades:
 - Gestión del estado del juego (escena actual, posición del jugador, verbos).
 - Coordinación de transiciones entre escenas.
 - Delegación de entrada, interacciones y renderizado a sus módulos especializados.
-
-#### PuzzleManager
-Clase estática que gestiona la lógica de los acertijos:
-- Gestión de la secuencia correcta del puzle del faro.
-- Validación del código del búnker.
-- Lógica del puzle de luces con callback de mensajes.
-- Verificación del código ingresado.
-
-#### Escenas Individuales
-Cada escena es una clase independiente con:
-- `HOTSPOTS`: Lista estática de hotspots interactivos.
-- `WALKABLE`: Polígono caminable como lista de coordenadas.
-- `get_hotspots()`: Método para obtener hotspots (condicional según estado).
-- `get_walkable()`: Método para obtener el polígono caminable.
-- `draw()`: Método de renderizado con parámetros de estado.
-- Métodos auxiliares privados (`_draw_*`) para renderizado de elementos específicos.
 
 ## Controles del Juego
 
@@ -105,8 +88,8 @@ Cada escena es una clase independiente con:
 ### Paso 1: Clonar el Repositorio
 
 ```bash
-git clone <URL_DEL_REPOSITORIO>
-cd Videojuego
+git clone https://github.com/Nahuellx7/AventuraGrafica.git
+cd AventuraGrafica
 ```
 
 ### Paso 2: Crear Entorno Virtual (Recomendado)
@@ -130,12 +113,6 @@ pip install pygame
 ### Paso 4: Ejecutar el Juego
 
 Desde la raíz del proyecto:
-
-```bash
-python aventuraGrafica/main.py
-```
-
-Alternativamente, usando el módulo:
 
 ```bash
 python -m aventuraGrafica.main

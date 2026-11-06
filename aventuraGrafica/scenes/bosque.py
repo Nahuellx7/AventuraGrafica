@@ -7,7 +7,7 @@ from engine.hotspot import Hotspot
 class BosqueScene:
     """Mapa boscoso con una salida de regreso a la aldea."""
 
-    HOTSPOTS = [Hotspot((880, 290, 80, 95), "Volver a la aldea")]
+    HOTSPOTS = [Hotspot((857, 300, 66, 76), "Volver a la aldea")]
     WALKABLE = [(0, 470), (95, 420), (220, 395), (365, 405),
                 (500, 385), (650, 400), (790, 390), (950, 425), (960, 480)]
 
@@ -60,10 +60,11 @@ class BosqueScene:
             pygame.draw.ellipse(self.screen, (58, 76, 48), (x, y, 35, 15))
             pygame.draw.ellipse(self.screen, (84, 99, 57), (x + 8, y + 2, 18, 8))
 
-        pygame.draw.rect(self.screen, (142, 96, 59), (876, 291, 80, 55))
-        pygame.draw.rect(self.screen, (205, 163, 105), (876, 291, 80, 55), 3)
-        self._draw_text("ALDEA", (916, 307), (241, 220, 169), centered=True)
-        self._draw_text("->", (916, 333), (230, 184, 104), centered=True)
+        pygame.draw.line(self.screen, (89, 75, 52), (910, 280), (910, 420), 8)
+        pygame.draw.rect(self.screen, (142, 96, 59), (857, 300, 66, 76))
+        pygame.draw.rect(self.screen, (205, 163, 105), (857, 300, 66, 76), 3)
+        self._draw_text("ALDEA", (890, 323), (241, 220, 169), centered=True)
+        pygame.draw.polygon(self.screen, (142, 96, 59), [(890, 376), (875, 391), (905, 391)])
         self._draw_text("BOSQUE", (24, 18), (241, 220, 169))
 
     def _draw_text(self, text, position, color, centered=False):

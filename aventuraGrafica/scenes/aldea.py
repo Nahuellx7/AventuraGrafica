@@ -1,4 +1,4 @@
-"""Escena de la isla."""
+"""Escena de la aldea."""
 
 import math
 import os
@@ -6,42 +6,41 @@ import pygame
 from engine.hotspot import Hotspot
 
 
-class IslaScene:
-    """Escena de la isla con hotspots, polígono caminable y dibujo."""
+class AldeaScene:
+    """Escena de la aldea con hotspots, polígono caminable y dibujo."""
 
-    # Hotspots específicos de la isla
+    # Hotspots específicos de la aldea
     HOTSPOTS = [
-        Hotspot((0, 285, 58, 72), "Camino al bosque"),
-        Hotspot((127, 277, 62, 112), "Puerta del refugio"),
-        Hotspot((365, 270, 230, 180), "Compuerta del bunker"),
-        Hotspot((48, 360, 78, 112), "Barril"),
-        Hotspot((860, 300, 60, 75), "Camino al faro"),
-        Hotspot((270, 190, 70, 185), "Cartel del puerto"),
-        Hotspot((772, 283, 62, 112), "Puerta de la herreria"),
-        Hotspot((110, 410, 60, 60), "Barra de hierro"),
+        Hotspot((35, 298, 70, 80), "Camino al bosque"),
+        Hotspot((136, 288, 44, 96), "Puerta del refugio"),
+        Hotspot((385, 335, 190, 107), "Compuerta del bunker"),
+        Hotspot((85, 410, 54, 54), "Barril"),
+        Hotspot((132, 405, 30, 50), "Barra de hierro"),
+        Hotspot((855, 298, 66, 80), "Camino al faro"),
+        Hotspot((781, 294, 44, 96), "Puerta de la herreria"),
     ]
 
-    # Polígono caminable de la isla
-    WALKABLE = [(35, 470), (90, 420), (260, 385), (380, 400),
-                (510, 380), (650, 408), (815, 375), (950, 425), (950, 480)]
+    # Polígono caminable de la aldea
+    WALKABLE = [(35, 470), (80, 420), (200, 385), (300, 400),
+                (400, 390), (500, 380), (650, 408), (800, 410), (950, 425), (950, 480)]
 
     def __init__(self, screen):
-        """Inicializa la escena de la isla."""
+        """Inicializa la escena de la aldea."""
         self.screen = screen
         project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
         background_path = os.path.join(project_root, "assets", "sprites", "cielo_aldea.png")
         self.background = pygame.image.load(background_path).convert()
 
     def get_hotspots(self):
-        """Retorna la lista de hotspots de la isla."""
+        """Retorna la lista de hotspots de la aldea."""
         return self.HOTSPOTS
 
     def get_walkable(self):
-        """Retorna el polígono caminable de la isla."""
+        """Retorna el polígono caminable de la aldea."""
         return self.WALKABLE
 
     def draw(self, inventory, barra_tomada=False, bunker_desbloqueado=False, barril_tomado=False):
-        """Dibuja la escena de la isla."""
+        """Dibuja la escena de la aldea."""
         self.screen.blit(self.background, (0, 0))
         # Piso con línea superior horizontal perfecta (Y constante de extremo a extremo)
         pygame.draw.rect(self.screen, (60, 57, 81), (0, 365, 960, 125))
@@ -55,7 +54,7 @@ class IslaScene:
             self._draw_iron_bar(140, 415, inventory)
         self._draw_lighthouse_path_sign()
         self._draw_forest_path_sign()
-        self._draw_label("ISLA", (24, 18))
+        self._draw_label("ALDEA", (24, 18))
 
     # ============ MÉTODOS AUXILIARES DE DIBUJO ============
 
@@ -76,8 +75,8 @@ class IslaScene:
                              (x + width + roof_overhang - 4, roof_base_y + 1)], 8)
         for row in range(2):
             for col in range(3):
-                # Ventanas distribuidas simétricamente, desplazadas hacia la izquierda
-                wx = x + 20 + col * (width - 90) // 2
+                # Ventanas de extremos más pegadas a las paredes
+                wx = x + 20 + col * 81
                 wy = y + 30 + row * 80
                 pygame.draw.rect(self.screen, (34, 31, 47), (wx, wy, 42, 54))
                 pygame.draw.rect(self.screen, (191, 145, 84), (wx + 5, wy + 6, 32, 42))
@@ -91,9 +90,15 @@ class IslaScene:
         pygame.draw.rect(self.screen, (218, 177, 104), (x + width // 2 - 45, y + 85, 90, 40))
         self._draw_text(sign, (x + width // 2, y + 105), pygame.font.Font(None, 20), INK, centered=True)
         if tavern:
-            pygame.draw.rect(self.screen, (244, 190, 90), (x + 28, y + 182, 60, 58))
-            pygame.draw.rect(self.screen, (52, 33, 34), (x + 36, y + 190, 44, 42))
-            self._draw_text("OPEN", (x + 58, y + 211), pygame.font.Font(None, 20), (255, 236, 174), centered=True)
+            # Refugio: OPEN a la derecha, más hacia afuera
+            pygame.draw.rect(self.screen, (205, 163, 105), (x + width - 71, y + 186, 52, 50))
+            pygame.draw.rect(self.screen, (52, 33, 34), (x + width - 67, y + 190, 44, 42))
+            self._draw_text("OPEN", (x + width - 45, y + 211), pygame.font.Font(None, 20), (255, 236, 174), centered=True)
+        else:
+            # Herreria: OPEN a la izquierda
+            pygame.draw.rect(self.screen, (205, 163, 105), (x + 19, y + 186, 52, 50))
+            pygame.draw.rect(self.screen, (52, 33, 34), (x + 23, y + 190, 44, 42))
+            self._draw_text("OPEN", (x + 45, y + 211), pygame.font.Font(None, 20), (255, 236, 174), centered=True)
 
     def _draw_bunker_gate(self, gate_unlocked):
         """Dibuja la compuerta metálica del bunker empotrada en el suelo."""
@@ -168,21 +173,20 @@ class IslaScene:
         GOLD = (230, 184, 104)
         PAPER = (241, 220, 169)
         pygame.draw.line(self.screen, (89, 75, 52), (910, 280), (910, 420), 8)
-        pygame.draw.rect(self.screen, (142, 96, 59), (860, 300, 60, 75))
-        pygame.draw.rect(self.screen, (205, 163, 105), (860, 300, 60, 75), 3)
-        self._draw_text("FARO", (890, 322), pygame.font.Font(None, 20), PAPER, centered=True)
-        pygame.draw.polygon(self.screen, (142, 96, 59), [(890, 375), (875, 390), (905, 390)])
-        self._draw_text("➜", (890, 395), pygame.font.Font(None, 20), GOLD, centered=True)
+        pygame.draw.rect(self.screen, (142, 96, 59), (857, 300, 66, 76))
+        pygame.draw.rect(self.screen, (205, 163, 105), (857, 300, 66, 76), 3)
+        self._draw_text("FARO", (890, 323), pygame.font.Font(None, 20), PAPER, centered=True)
+        pygame.draw.polygon(self.screen, (142, 96, 59), [(890, 376), (875, 391), (905, 391)])
 
     def _draw_forest_path_sign(self):
         """Dibuja la entrada al bosque en el borde izquierdo de la aldea."""
-        pygame.draw.line(self.screen, (89, 75, 52), (24, 276), (24, 385), 7)
-        pygame.draw.rect(self.screen, (142, 96, 59), (4, 288, 48, 54))
-        pygame.draw.rect(self.screen, (205, 163, 105), (4, 288, 48, 54), 3)
-        self._draw_text("BOSQUE", (28, 304), pygame.font.Font(None, 16),
-                        (241, 220, 169), centered=True)
-        self._draw_text("←", (28, 330), pygame.font.Font(None, 19),
-                        (230, 184, 104), centered=True)
+        GOLD = (230, 184, 104)
+        PAPER = (241, 220, 169)
+        pygame.draw.line(self.screen, (89, 75, 52), (50, 280), (50, 420), 8)
+        pygame.draw.rect(self.screen, (142, 96, 59), (37, 300, 66, 76))
+        pygame.draw.rect(self.screen, (205, 163, 105), (37, 300, 66, 76), 3)
+        self._draw_text("BOSQUE", (70, 323), pygame.font.Font(None, 20), PAPER, centered=True)
+        pygame.draw.polygon(self.screen, (142, 96, 59), [(70, 376), (55, 391), (85, 391)])
 
     def _draw_cobblestones(self, start_y, end_y):
         """Dibuja adoquines."""

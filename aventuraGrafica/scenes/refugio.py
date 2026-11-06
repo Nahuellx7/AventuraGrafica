@@ -9,19 +9,17 @@ class RefugioScene:
 
     # Hotspots base del refugio
     HOTSPOTS_BASE = [
-        Hotspot((12, 280, 110, 195), "Salir a la isla"),
+        Hotspot((25, 292, 90, 175), "Salir a la aldea"),
         Hotspot((350, 180, 190, 220), "Bruno"),
-        Hotspot((560, 175, 190, 130), "Nota de las luces"),
-        Hotspot((165, 325, 155, 105), "Mesa"),
+        Hotspot((651, 224, 106, 70), "Nota de las luces"),
     ]
 
     # Hotspots con llave disponible
     HOTSPOTS_WITH_KEY = [
-        Hotspot((12, 280, 110, 195), "Salir a la isla"),
+        Hotspot((25, 292, 90, 175), "Salir a la aldea"),
         Hotspot((350, 180, 190, 220), "Bruno"),
-        Hotspot((650, 330, 190, 95), "Llave vieja"),
-        Hotspot((560, 175, 190, 130), "Nota de las luces"),
-        Hotspot((165, 325, 155, 105), "Mesa"),
+        Hotspot((700, 338, 120, 50), "Llave vieja"),
+        Hotspot((651, 224, 106, 70), "Nota de las luces"),
     ]
 
     # Polígono caminable del refugio

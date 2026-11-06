@@ -59,12 +59,12 @@ class GameSceneInteractionMixin:
             "Camino al faro": "El sendero sube por el acantilado hacia el viejo faro.",
             "Cartel del puerto": "La Isla Olvidada: «Donde la niebla guarda lo que el mar olvida».",
             "Puerta de la herreria": "Una herrería ruidosa. Huele a hierro caliente.",
-            "Salir a la isla": "La salida conduce a la isla.",
+            "Salir a la aldea": "La salida conduce a la aldea.",
             "Bruno": "Bruno, antiguo farero, descansa en el refugio.",
             "Llave vieja": "Una llave antigua y oxidada, pero todavía funcional.",
             "Nota de las luces": "La nota dice: «Sol, Luna, Estrella».",
             "Mesa": "Un mapa húmedo del acantilado cubre la mesa.",
-            "Volver al puerto": "El cartel indica el camino de regreso a la isla.",
+            "Volver a la aldea": "El cartel indica el camino de regreso a la aldea.",
             "Puerta del faro": "La puerta está abierta. Puedo entrar al faro." if self.faro_desbloqueado else "La cerradura espera una llave maestra.",
             "Bajar": "Bajar por la escalera al exterior del faro.",
             "Luz de la luna": "Un disco de vidrio azul con una luna grabada.",
@@ -75,7 +75,6 @@ class GameSceneInteractionMixin:
             "Botón del sol": "Un control pequeño debajo de la luz del sol.",
             "Interruptor de encendido": "Una palanca grande para activar el faro cuando las luces estén alineadas.",
             "Herrero": "El herrero trabaja con metal en su taller.",
-            "Cielo nocturno": "El cielo estrellado revela un patrón: 4-7-2-9." if self.puzle_luces_resuelto else "Las estrellas brillan en la noche. Necesito resolver el puzle de luces para ver el patrón.",
             "Volver": "Volver a la sala del faro.",
             "Panel numérico": "Un panel para ingresar un código de 4 dígitos.",
             "Cámara secreta": "Una cámara oculta que guarda el tesoro de oro.",
@@ -90,7 +89,7 @@ class GameSceneInteractionMixin:
 
     def _take(self, name):
         """Acción de agarrar."""
-        if name == "Barril" and self.scene == "isla":
+        if name == "Barril" and self.scene == "aldea":
             if not self.herrero_menciono_barril:
                 self._say("No sé de quién será ese barril. Mejor no llevármelo.")
             elif self.barril_entregado:
@@ -102,7 +101,7 @@ class GameSceneInteractionMixin:
                 self._say("Recojo el barril perdido del herrero.")
             else:
                 self._say("No tengo espacio en el inventario para llevar el barril.")
-        elif name == "Barra de hierro" and self.scene == "isla":
+        elif name == "Barra de hierro" and self.scene == "aldea":
             if self.inventory.has("Barra de hierro"):
                 self._say("Ya tengo la barra de hierro.")
             else:
@@ -145,7 +144,7 @@ class GameSceneInteractionMixin:
 
         # Puertas y salidas: si no hay item seleccionado, intentar entrar
         if name in ("Puerta del refugio", "Puerta de la herreria", "Camino al faro",
-                    "Salir a la isla", "Volver al puerto", "Bajar", "Volver", "Salir del bunker",
+                    "Salir a la aldea", "Volver a la aldea", "Bajar", "Volver", "Salir del bunker",
                     "Camino al bosque", "Volver a la aldea", "Caja fuerte", "Palanca secreta"):
             self._activar_hotspot(name)
             return
@@ -187,16 +186,16 @@ class GameSceneInteractionMixin:
             item_name_lower = item.name.lower()
             if item_name_lower.startswith("llave"):
                 item_with_article = "la " + item_name_lower
-                location = "por aqui"
+                location = "por aquí"
             elif item_name_lower.startswith("barra"):
                 item_with_article = "la " + item_name_lower
-                location = "aca"
+                location = "por aquí"
             elif item_name_lower.startswith("tarjeta"):
                 item_with_article = "la " + item_name_lower
-                location = "aca"
+                location = "por aquí"
             else:
                 item_with_article = item_name_lower
-                location = "aca"
+                location = "por aquí"
             self._say("No parece que " + item_with_article + " sirva " + location)
 
     def _combine_items(self, first, second):
@@ -209,7 +208,7 @@ class GameSceneInteractionMixin:
         self.state = EstadoJuego.DIALOGO
         self.current_npc = "bruno"
         self.dialogue_choices = [
-            ("¿Qué pasó con esta isla?", "isla"),
+            ("¿Qué pasó con esta aldea?", "aldea"),
             ("¿Recuerdas cómo van las luces del faro?", "orden"),
             ("¿Tienes algo útil que me puedas dar?", "ayuda"),
             ("Me voy.", "salir"),
@@ -232,7 +231,7 @@ class GameSceneInteractionMixin:
 
     def _elegir_dialogo(self, choice):
         """Procesa la elección de diálogo."""
-        if choice == "isla":
+        if choice == "aldea":
             self._say("Bruno: «La niebla llegó y todos huyeron».", duration=3)
         elif choice == "orden":
             self._say("Bruno: «Mi nota dice: Sol, Luna, Estrella, pero el mecanismo tiene sus secretos»", duration=3)
@@ -294,7 +293,7 @@ class GameSceneInteractionMixin:
             self.dialogue.clear_message()
             self.current_npc = None
             return
-        if choice in ("isla", "orden", "ayuda", "trabajo", "cara_larga", "armar_llave", "entregar_barril"):
+        if choice in ("aldea", "orden", "ayuda", "trabajo", "cara_larga", "armar_llave", "entregar_barril"):
             self.dialogue_choices = [("Volver a preguntar", "volver")]
             if self.current_npc == "herrero" and self.inventory.has("Barril") and not self.barril_entregado:
                 self.dialogue_choices.append(("Entregarle el barril perdido", "entregar_barril"))
@@ -303,33 +302,33 @@ class GameSceneInteractionMixin:
     def _activar_hotspot(self, name):
         """Activa un hotspot (cambio de escena, uso de objeto, etc.)."""
         # Puertas y salidas: cambio de escena directo
-        if self.scene == "isla" and name == "Puerta del refugio":
+        if self.scene == "aldea" and name == "Puerta del refugio":
             self.audio.play_sound("abrir_puerta")
             self._cambiar_escena("refugio", starting_position=(160, 430))
-        elif self.scene == "isla" and name == "Camino al bosque":
+        elif self.scene == "aldea" and name == "Camino al bosque":
             self._cambiar_escena("bosque", starting_position=(870, 425))
         elif self.scene == "bosque" and name == "Volver a la aldea":
-            self._cambiar_escena("isla", starting_position=(50, 425))
-        elif self.scene == "isla" and name == "Puerta de la herreria":
+            self._cambiar_escena("aldea", starting_position=(50, 425))
+        elif self.scene == "aldea" and name == "Puerta de la herreria":
             self.audio.play_sound("abrir_puerta")
             self._cambiar_escena("herreria", starting_position=(160, 430))
-        elif self.scene == "isla" and name == "Camino al faro":
+        elif self.scene == "aldea" and name == "Camino al faro":
             self._cambiar_escena("faro", starting_position=(170, 435))
             self._say("El sendero asciende hasta la vieja torre.")
-        elif self.scene == "isla" and name == "Compuerta del bunker":
+        elif self.scene == "aldea" and name == "Compuerta del bunker":
             if self.bunker_desbloqueado:
                 self._cambiar_escena("bunker_interior", starting_position=(480, 420))
                 self._say("Desciendo por la escalera al interior del bunker.")
             else:
                 self._say("La compuerta está cerrada. Necesito la tarjeta de acceso.")
-        elif self.scene == "refugio" and name == "Salir a la isla":
+        elif self.scene == "refugio" and name == "Salir a la aldea":
             self.audio.play_sound("cerrar_puerta")
-            self._cambiar_escena("isla", starting_position=(230, 420))
-        elif self.scene == "herreria" and name == "Salir a la isla":
+            self._cambiar_escena("aldea", starting_position=(230, 420))
+        elif self.scene == "herreria" and name == "Salir a la aldea":
             self.audio.play_sound("cerrar_puerta")
-            self._cambiar_escena("isla", starting_position=(830, 425))
-        elif self.scene == "faro" and name == "Volver al puerto":
-            self._cambiar_escena("isla", starting_position=(830, 425))
+            self._cambiar_escena("aldea", starting_position=(830, 425))
+        elif self.scene == "faro" and name == "Volver a la aldea":
+            self._cambiar_escena("aldea", starting_position=(830, 425))
         elif self.scene == "faro" and name == "Puerta del faro":
             if not self.faro_desbloqueado:
                 self._say("La puerta del faro está cerrada. La cerradura espera una llave.")
@@ -341,16 +340,10 @@ class GameSceneInteractionMixin:
         elif self.scene == "faro_interior" and name == "Bajar":
             self.audio.play_sound("cerrar_puerta")
             self._cambiar_escena("faro", starting_position=(420, 400))
-        elif self.scene == "faro_interior" and name == "Cielo nocturno":
-            if self.puzle_luces_resuelto:
-                self._cambiar_escena("faro_ventana", starting_position=(480, 420))
-                self._say("Veo el patrón de estrellas claramente.")
-            else:
-                self._say("Las estrellas brillan en la noche. Necesito resolver el puzle de luces para ver el patrón.")
         elif self.scene == "faro_ventana" and name == "Volver":
             self._cambiar_escena("faro_interior", starting_position=(480, 420))
         elif self.scene == "bunker_interior" and name == "Salir del bunker":
-            self._cambiar_escena("isla", starting_position=(480, 420))
+            self._cambiar_escena("aldea", starting_position=(480, 420))
         # Puertas que requieren objeto específico (se usan con verbo USAR)
         elif self.scene == "faro" and name == "Puerta del faro":
             # Este caso se maneja en _interact con verbo USAR
@@ -402,7 +395,7 @@ class GameSceneInteractionMixin:
             self._take(name)
         elif verb == "USAR":
             if name in ("Puerta del refugio", "Puerta de la herreria", "Camino al faro",
-                        "Salir a la isla", "Volver al puerto", "Bajar", "Volver", "Salir del bunker",
+                        "Salir a la aldea", "Volver a la aldea", "Bajar", "Volver", "Salir del bunker",
                         "Puerta del faro", "Compuerta del bunker"):
                 self._use(name, item)
             else:

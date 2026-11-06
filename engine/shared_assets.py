@@ -9,7 +9,7 @@ desde cualquier juego, sin depender de dónde se ejecute.
 import os
 
 _ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # carpeta 2027
-MUSIC_VOLUME = 0.15
+MUSIC_VOLUME = 0.30
 
 
 def sfx_path(name, extension="wav"):

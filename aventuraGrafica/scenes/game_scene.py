@@ -10,7 +10,7 @@ from engine.shared_assets import music_path, sfx_path
 from engine.audio import AudioManager
 
 # Importar escenas individuales
-from .isla import IslaScene
+from .aldea import AldeaScene
 from .refugio import RefugioScene
 from .herreria import HerreriaScene
 from .faro_exterior import FaroExteriorScene
@@ -70,7 +70,7 @@ class GameScene(GameSceneInputMixin, GameSceneInteractionMixin, GameSceneRenderi
         }
 
         # Estado del juego
-        self.scene = "isla"
+        self.scene = "aldea"
         self.verb = "MIRAR"
         self.state = EstadoJuego.INACTIVO
         self.interact_until = 0
@@ -109,7 +109,7 @@ class GameScene(GameSceneInputMixin, GameSceneInteractionMixin, GameSceneRenderi
         self.llave_disponible = False
 
         # Inicializar escenas individuales
-        self.isla_scene = IslaScene(self.game.screen)
+        self.aldea_scene = AldeaScene(self.game.screen)
         self.refugio_scene = RefugioScene(self.game.screen)
         self.herreria_scene = HerreriaScene(self.game.screen)
         self.faro_exterior_scene = FaroExteriorScene(self.game.screen)
@@ -121,7 +121,7 @@ class GameScene(GameSceneInputMixin, GameSceneInteractionMixin, GameSceneRenderi
 
         # Inicializar mundo
         self._configurar_mundo()
-        self._cambiar_escena("isla", starting_position=(480, 420))
+        self._cambiar_escena("aldea", starting_position=(480, 420))
         self._say("La noche cae sobre La Isla Olvidada. El faro lleva años apagado.")
 
     def on_enter(self):
@@ -179,7 +179,7 @@ class GameScene(GameSceneInputMixin, GameSceneInteractionMixin, GameSceneRenderi
     def _configurar_mundo(self):
         """Configura las zonas caminables y hotspots delegando a las escenas."""
         self.walkable = {
-            "isla": self.isla_scene.get_walkable(),
+            "aldea": self.aldea_scene.get_walkable(),
             "bosque": self.bosque_scene.get_walkable(),
             "refugio": self.refugio_scene.get_walkable(),
             "herreria": self.herreria_scene.get_walkable(),
@@ -191,7 +191,7 @@ class GameScene(GameSceneInputMixin, GameSceneInteractionMixin, GameSceneRenderi
         }
 
         self.hotspots = {
-            "isla": self.isla_scene.get_hotspots(),
+            "aldea": self.aldea_scene.get_hotspots(),
             "bosque": self.bosque_scene.get_hotspots(),
             "refugio": self.refugio_scene.get_hotspots(self.llave_disponible),
             "herreria": self.herreria_scene.get_hotspots(),
@@ -229,7 +229,7 @@ class GameScene(GameSceneInputMixin, GameSceneInteractionMixin, GameSceneRenderi
         if not self.audio.enabled:
             return
         track_by_scene = {
-            "isla": "aldea",
+            "aldea": "aldea",
             "refugio": "aldea",
             "herreria": "aldea",
             "bosque": "bosque",

@@ -9,7 +9,7 @@ class HerreriaScene:
 
     # Hotspots de la herrería
     HOTSPOTS = [
-        Hotspot((12, 280, 110, 195), "Salir a la isla"),
+        Hotspot((12, 280, 110, 195), "Salir a la aldea"),
         Hotspot((350, 180, 190, 220), "Herrero"),
     ]
 

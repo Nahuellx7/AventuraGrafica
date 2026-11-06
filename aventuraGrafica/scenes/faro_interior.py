@@ -15,15 +15,14 @@ class FaroInteriorScene:
     # Hotspots del faro interior
     HOTSPOTS = [
         Hotspot((350, 420, 260, 60), "Bajar"),
-        Hotspot((305, 230, 80, 80), "Luz de la luna"),
-        Hotspot((431, 230, 80, 80), "Luz de la estrella"),
-        Hotspot((557, 230, 80, 80), "Luz del sol"),
-        Hotspot((330, 325, 30, 30), "Botón de la luna"),
-        Hotspot((456, 325, 30, 30), "Botón de la estrella"),
-        Hotspot((582, 325, 30, 30), "Botón del sol"),
+        Hotspot((325, 230, 80, 80), "Luz de la luna"),
+        Hotspot((440, 230, 80, 80), "Luz de la estrella"),
+        Hotspot((555, 230, 80, 80), "Luz del sol"),
+        Hotspot((350, 325, 30, 30), "Botón de la luna"),
+        Hotspot((465, 325, 30, 30), "Botón de la estrella"),
+        Hotspot((580, 325, 30, 30), "Botón del sol"),
         Hotspot((380, 370, 200, 70), "Interruptor de encendido"),
         Hotspot((825, 52, 100, 100), "Luna"),
-        Hotspot((80, 30, 200, 180), "Cielo nocturno"),
         Hotspot((750, 370, 60, 40), "Tarjeta de acceso"),
     ]
 
