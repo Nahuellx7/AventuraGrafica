@@ -17,6 +17,15 @@ class MenuScene(Scene):
         self.font_subtitle = pygame.font.Font(None, 36)
         self.font_hint = pygame.font.Font(None, 26)
 
+        # Cargar fondo del menú
+        try:
+            root_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+            background_path = os.path.join(root_dir, "assets", "sprites", "menu.png")
+            background = pygame.image.load(background_path).convert()
+            self.background_image = pygame.transform.smoothscale(background, game.screen.get_size())
+        except pygame.error:
+            self.background_image = None
+
         # Cargar cursor personalizado
         try:
             cursor_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "assets", "sprites", "pointer_b.png")
@@ -27,28 +36,14 @@ class MenuScene(Scene):
         # Verificar si hay un juego en curso
         self.game_started = hasattr(game, 'game_scene') and game.game_scene is not None
 
-        # Generar estrellas para el fondo
-        self.stars = self._generate_stars()
+        self.volume_slider_rect = pygame.Rect(330, 400, 300, 65)
+        self.dragging_volume = False
 
         # Crear botones iniciales
         self._crear_botones()
 
         # Animación
         self.t = 0.0
-
-    def _generate_stars(self):
-        """Genera estrellas para el fondo."""
-        import random
-        random.seed(42)
-        stars = []
-        for _ in range(150):
-            x = random.randint(0, 960)
-            y = random.randint(0, 640)
-            size = random.randint(1, 3)
-            brightness = random.randint(230, 255)
-            twinkle_speed = random.uniform(0.5, 2.0)
-            stars.append({'x': x, 'y': y, 'size': size, 'brightness': brightness, 'speed': twinkle_speed})
-        return stars
 
     def _crear_botones(self):
         """Crea los botones según el estado del juego."""
@@ -58,11 +53,11 @@ class MenuScene(Scene):
                 font_size=36, color=(90, 150, 220), hover_color=(110, 170, 240)
             )
             self.boton_reiniciar = Button(
-                330, 410, 300, 60, "Reiniciar", self.reiniciar_juego,
+                330, 480, 300, 60, "Reiniciar", self.reiniciar_juego,
                 font_size=36, color=(220, 160, 60), hover_color=(240, 180, 80)
             )
             self.boton_salir = Button(
-                330, 490, 300, 60, "Salir", self.salir,
+                330, 555, 300, 60, "Salir", self.salir,
                 font_size=36, color=(220, 90, 90), hover_color=(240, 110, 110)
             )
         else:
@@ -88,13 +83,7 @@ class MenuScene(Scene):
         if not self.game_started and hasattr(self.game, 'audio') and self.game.audio.enabled:
             try:
                 self.game.audio.load_music(music_path("menu_principal", "mp3"))
-                self.game.audio.play_music(loops=-1, volume=MUSIC_VOLUME)
-            except Exception as e:
-                pass
-        # Si hay juego en pausa, detener cualquier música de fondo previa
-        elif self.game_started and hasattr(self.game, 'audio') and self.game.audio.enabled:
-            try:
-                self.game.audio.stop_music()
+                self.game.audio.play_music(loops=-1, volume=self.game.audio.music_volume)
             except Exception as e:
                 pass
 
@@ -124,13 +113,6 @@ class MenuScene(Scene):
 
     def reanudar_juego(self):
         """Reanuda el juego existente."""
-        # Detener música del menú
-        if hasattr(self.game, 'audio') and self.game.audio.enabled:
-            try:
-                self.game.audio.stop_music()
-            except:
-                pass
-
         # Reproducir sonido de click si existe
         if hasattr(self.game, 'audio'):
             try:
@@ -140,6 +122,13 @@ class MenuScene(Scene):
 
         # Cambiar a la escena del juego existente
         self.game.change_scene("game")
+
+    def _set_volume_from_mouse(self, mouse_x):
+        """Ajusta el volumen según la posición horizontal del slider."""
+        track_start = self.volume_slider_rect.left + 20
+        track_end = self.volume_slider_rect.right - 20
+        volume = (mouse_x - track_start) / (track_end - track_start)
+        self.game.audio.set_music_volume(max(0.0, min(1.0, volume)))
 
     def reiniciar_juego(self):
         """Reinicia el juego desde el principio."""
@@ -177,6 +166,15 @@ class MenuScene(Scene):
                 self.boton_reanudar.handle_event(event)
                 self.boton_reiniciar.handle_event(event)
                 self.boton_salir.handle_event(event)
+
+                if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                    if self.volume_slider_rect.collidepoint(event.pos):
+                        self.dragging_volume = True
+                        self._set_volume_from_mouse(event.pos[0])
+                elif event.type == pygame.MOUSEMOTION and self.dragging_volume:
+                    self._set_volume_from_mouse(event.pos[0])
+                elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
+                    self.dragging_volume = False
             else:
                 self.boton_comenzar.handle_event(event)
                 self.boton_salir.handle_event(event)
@@ -199,20 +197,10 @@ class MenuScene(Scene):
 
     def draw(self, surface):
         """Dibuja el menú principal."""
-        # Fondo azul oscuro a dorado
-        for y in range(0, surface.get_height(), 4):
-            progress = y / surface.get_height()
-            r = int(25 + progress * 120)
-            g = int(30 + progress * 100)
-            b = int(50 + progress * 80)
-            pygame.draw.rect(surface, (r, g, b), (0, y, surface.get_width(), 4))
-
-        # Estrellas
-        for star in self.stars:
-            twinkle = int((pygame.math.Vector2(1, 1).length() * 0.5 + 0.5) * 50)
-            brightness = min(255, star['brightness'] + twinkle)
-            pygame.draw.circle(surface, (brightness, brightness, brightness),
-                            (star['x'], star['y']), star['size'])
+        if self.background_image:
+            surface.blit(self.background_image, (0, 0))
+        else:
+            surface.fill((25, 30, 50))
         
         # Título principal
         title_surf = self.font_title.render("LA ISLA", True, (255, 235, 150))
@@ -228,6 +216,20 @@ class MenuScene(Scene):
         # Dibujar botones
         if self.game_started:
             self.boton_reanudar.draw(surface)
+            volume_text = self.font_hint.render(
+                f"Volumen de música: {round(self.game.audio.music_volume * 100)}%",
+                True, (255, 255, 255)
+            )
+            surface.blit(volume_text, volume_text.get_rect(center=(surface.get_width() // 2, 414)))
+
+            track_start = self.volume_slider_rect.left + 20
+            track_end = self.volume_slider_rect.right - 20
+            track_y = 445
+            knob_x = track_start + round((track_end - track_start) * self.game.audio.music_volume)
+            pygame.draw.line(surface, (35, 40, 55), (track_start, track_y), (track_end, track_y), 10)
+            pygame.draw.line(surface, (100, 175, 235), (track_start, track_y), (knob_x, track_y), 6)
+            pygame.draw.circle(surface, (245, 245, 250), (knob_x, track_y), 11)
+            pygame.draw.circle(surface, (35, 40, 55), (knob_x, track_y), 11, 2)
             self.boton_reiniciar.draw(surface)
             self.boton_salir.draw(surface)
         else:

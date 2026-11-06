@@ -7,6 +7,7 @@ sigue funcionando.
 """
 
 import pygame
+from engine.shared_assets import MUSIC_VOLUME
 
 
 class AudioManager:
@@ -16,6 +17,7 @@ class AudioManager:
         self.sounds = {}
         self.active_channels = {}  # Nombre del sonido -> canal activo
         self.music_path = None
+        self.music_volume = MUSIC_VOLUME
         self.enabled = True
         try:
             pygame.mixer.pre_init(44100, -16, 2, 512)
@@ -62,16 +64,25 @@ class AudioManager:
             return
         self.music_path = path
 
-    def play_music(self, loops=-1, volume=0.25):
+    def play_music(self, loops=-1, volume=None):
         """Reproduce la música de fondo en bucle."""
         if not self.enabled or not self.music_path:
             return
         try:
             pygame.mixer.music.load(self.music_path)
-            pygame.mixer.music.set_volume(volume)
+            if volume is not None:
+                self.set_music_volume(volume)
+            else:
+                pygame.mixer.music.set_volume(self.music_volume)
             pygame.mixer.music.play(loops)
         except pygame.error as e:
             pass
+
+    def set_music_volume(self, volume):
+        """Actualiza el volumen persistente de la música, entre 0 y 1."""
+        self.music_volume = max(0.0, min(1.0, volume))
+        if self.enabled:
+            pygame.mixer.music.set_volume(self.music_volume)
 
     def stop_music(self):
         if not self.enabled:

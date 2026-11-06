@@ -6,7 +6,7 @@ import pygame
 from engine.ui import Scene
 from engine.dialogue_manager import DialogueManager
 from engine.inventory import Inventory
-from engine.shared_assets import MUSIC_VOLUME, music_path, sfx_path
+from engine.shared_assets import music_path, sfx_path
 from engine.audio import AudioManager
 
 # Importar escenas individuales
@@ -245,7 +245,7 @@ class GameScene(GameSceneInputMixin, GameSceneInteractionMixin, GameSceneRenderi
             self.audio.stop_music()
         else:
             self.audio.load_music(music_path(track, "mp3"))
-            self.audio.play_music(loops=-1, volume=MUSIC_VOLUME)
+            self.audio.play_music(loops=-1, volume=self.audio.music_volume)
         self.music_track = track
 
     def _actualizar_hotspots_refugio(self):

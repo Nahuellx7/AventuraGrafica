@@ -3,7 +3,7 @@
 import os
 import pygame
 from engine.ui import Scene, Button
-from engine.shared_assets import MUSIC_VOLUME, music_path
+from engine.shared_assets import music_path
 
 
 class VictoryScene(Scene):
@@ -70,7 +70,7 @@ class VictoryScene(Scene):
         if hasattr(self.game, 'audio') and self.game.audio.enabled:
             try:
                 self.game.audio.load_music(music_path("menu_principal", "mp3"))
-                self.game.audio.play_music(loops=-1, volume=MUSIC_VOLUME)
+                self.game.audio.play_music(loops=-1, volume=self.game.audio.music_volume)
             except Exception as e:
                 pass
 
